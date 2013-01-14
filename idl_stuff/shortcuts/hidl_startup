@@ -1,0 +1,6 @@
+#!/bin/csh -f
+#
+
+setenv IDL_STARTUP $HEALPIX/src/idl/HEALPix_startup
+
+$IDL_DIR/bin/idl

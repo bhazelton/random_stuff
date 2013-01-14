@@ -1,0 +1,12 @@
+#!/bin/csh -f
+#
+
+setenv SSW /usr/local/ssw
+setenv HESSI_PATH $SSW/hessi/
+setenv SSW_INSTR "hessi spex xray"
+setenv PERLLIB /usr/lib/perl5/5.8.0
+source $SSW/gen/setup/setup.ssw
+setenv HSI_DATA_ARCHIVE /home/dsmith/rhessi/DAT
+setenv HSI_DATA_USER /mnt/usbdrive/rhessidat
+
+$SSW/gen/setup/ssw_idlde
