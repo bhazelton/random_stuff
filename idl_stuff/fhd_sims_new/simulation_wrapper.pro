@@ -37,14 +37,15 @@ pro simulation_wrapper, t32 = t32, define_baselines = define_baselines, baseline
      names = 'offaxis'
   endif
 
-  noise_file = rootdir('mwa') + 'simulations/' + 'sim_' + tag + 'noise_uvf.idlsave'
+  froot = base_path('data') + 'fhd_simulations/'
+  noise_file = froot + 'sim_' + tag + 'noise_uvf.idlsave'
   test_noise = file_test(noise_file)  *  (1 - file_test(noise_file, /zero_length))
 
-  eor_file = rootdir('mwa') + 'simulations/' + 'sim_' + tag + 'eor_uvf.idlsave'
+  eor_file = froot + 'sim_' + tag + 'eor_uvf.idlsave'
   test_eor = file_test(eor_file)  *  (1 - file_test(eor_file, /zero_length))
 
-  info_file = rootdir('mwa') + 'simulations/' + 'sim_' + tag + 'info.idlsave'
-  weights_file = rootdir('mwa') + 'simulations/' + 'sim_' + tag + 'weights.idlsave'
+  info_file = froot + 'sim_' + tag + 'info.idlsave'
+  weights_file = froot + 'sim_' + tag + 'weights.idlsave'
   
   if keyword_set(full_sky) then begin
 
@@ -97,7 +98,7 @@ pro simulation_wrapper, t32 = t32, define_baselines = define_baselines, baseline
 
   endif
   
-  sim_files = rootdir('mwa') + 'simulations/' + 'sim_' + tag + names + '_uvf.idlsave'
+  sim_files = froot + 'sim_' + tag + names + '_uvf.idlsave'
 
   nsims = n_elements(sim_files)
   for i = 0, nsims-1 do begin

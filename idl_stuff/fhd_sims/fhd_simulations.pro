@@ -19,9 +19,9 @@ pro fhd_simulations, nfreq_per_image = nfreq_per_image, x_offset = x_offset, y_o
      if keyword_set(use_outliers) then filename = filename + '_512t' else filename = filename + '_496t'
      if keyword_set(fine_res) then filename = filename + '_fine'
   endelse
-       
-  file_path=rootdir('simulations') + 'fhd_files/'
-  sim_path=rootdir('simulations')
+  
+  file_path=base_path('data') + 'fhd_simulations_old/fhd_files/'
+  sim_path=base_path('data') + 'fhd_simulations_old/'
   pol_names=['xx','yy','xy','yx']
 
   if keyword_set(simple_baselines) then tag =  baseline_layout + spacing_name + '_' $
@@ -33,7 +33,8 @@ pro fhd_simulations, nfreq_per_image = nfreq_per_image, x_offset = x_offset, y_o
   if n_elements(info_file) ne 1 then info_file = sim_path + 'sim_' + tag + 'info.idlsave'
   if n_elements(weights_file) ne 1 then weights_file = sim_path + 'sim_' + tag + 'weights.idlsave'
   if n_elements(beam_shape_file) ne 1 then beam_shape_file = sim_path + 'sim_' + tag + 'beam.idlsave'
-  if keyword_set(noise_gen) and n_elements(noise_file) ne 1 then noise_file = sim_path + 'sim_' + tag + 'noise_uvf.idlsave'
+  if keyword_set(noise_gen) and n_elements(noise_file) ne 1 then $
+     noise_file = sim_path + 'sim_' + tag + 'noise_uvf.idlsave'
 
   if keyword_set(refresh) then restore_last=0 else $
      restore_last = 1
@@ -89,13 +90,13 @@ pro fhd_simulations, nfreq_per_image = nfreq_per_image, x_offset = x_offset, y_o
   my_source_array[5,*]=Round(my_source_array[0,*])+Round(my_source_array[1,*])*dimension
 
   if keyword_set(eor_gen) then begin
-     if n_elements(eor_file) ne 1 then eor_file = rootdir('mwa') + 'simulations/sim_' + tag + 'eor_uvf.idlsave'
+     if n_elements(eor_file) ne 1 then eor_file = sim_path + 'sim_' + tag + 'eor_uvf.idlsave'
      kx_arr = (indgen(dimension) - dimension/2)*kbinsize
      ky_arr = (indgen(elements) - elements/2)*kbinsize
      freq_arr = indgen(nfreq) * freq_resolution + mean(frequency_array[indgen(nfreq_per_image)] / 1e6) ;; in MHz
 
      eor_uvf = eor_sim(kx_arr, ky_arr, freq_arr)
-     save, file = rootdir('mwa') + 'simulations/sim_' + tag + 'eor_uvf_initial.idlsave', eor_uvf, kx_arr, ky_arr, freq_arr
+     save, file = sim_path + 'sim_' + tag + 'eor_uvf_initial.idlsave', eor_uvf, kx_arr, ky_arr, freq_arr
   endif
 
   if n_elements(test_power_shape) gt 1 then message, 'Only one test power shape can be run at a time'
@@ -103,7 +104,7 @@ pro fhd_simulations, nfreq_per_image = nfreq_per_image, x_offset = x_offset, y_o
      case test_power_shape of
         'flat': begin
            if n_elements(test_power_file) ne 1 then $
-              test_power_file = rootdir('mwa') + 'simulations/sim_' + tag + test_power_shape + '_uvf.idlsave'
+              test_power_file = sim_path + 'sim_' + tag + test_power_shape + '_uvf.idlsave'
            sigma = 100
     
            kx_arr = (indgen(dimension) - dimension/2)*kbinsize
@@ -111,7 +112,7 @@ pro fhd_simulations, nfreq_per_image = nfreq_per_image, x_offset = x_offset, y_o
            freq_arr = indgen(nfreq) * freq_resolution + mean(frequency_array[indgen(nfreq_per_image)] / 1e6) ;; in MHz
 
            test_power_uvf = eor_sim(kx_arr, ky_arr, freq_arr, flat_sigma = sigma)       
-           save, file = rootdir('mwa') + 'simulations/sim_' + tag + test_power_shape +'_uvf_initial.idlsave', $
+           save, file = sim_path + 'sim_' + tag + test_power_shape +'_uvf_initial.idlsave', $
                  test_power_uvf, kx_arr, ky_arr, freq_arr
         end
         else: message, 'Test power shape not recognized'

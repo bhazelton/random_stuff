@@ -41,7 +41,7 @@ pro sim_test, sim_num = sim_num, t32 = t32, baseline_layout = baseline_layout, b
               use_outliers = use_outliers, plot_diff = plot_diff, clean_type = clean_type, off_axis = off_axis, $
               full_sky = full_sky, source_radius = source_radius
 
-  froot = base_path() + 'fhd/simulations/'
+  froot = base_path('data') + 'fhd_simulations_old/'
 
   n_space = n_elements(baseline_spacing)
   n_layout = n_elements(baseline_layout)

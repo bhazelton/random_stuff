@@ -1,21 +1,21 @@
 ;base_path = '/home/bryna/Documents/Physics/idl_working/'
 ;base_path = '/Users/bryna/Documents/Physics/bryna_svn/idl_working/'
-base_path = '/Users/bryna/Documents/Physics/bryna_git/idl_stuff/'
+git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
-path_dirs = base_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro', 'mwa', $
-                         'power_spectrum', 'fhd_sims', 'fhd_sims/simulations', 'single_use', 'textoidl', $
-                         'Healpix_2.15a/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
-                                                     ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + $
-                                                     ['cgis', 'obsolete_astron']]] ;; , $
+path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro', 'mwa', $
+                        'power_spectrum', 'fhd_sims', 'single_use', 'textoidl', $
+                        'Healpix_2.15a/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
+                                                    ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + $
+                                                    ['cgis', 'obsolete_astron']]] ;; , $
                          ;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
                          ;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
 
-ps_path = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'power_spectrum']
+ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wappers']
 
-ian_path = '/Users/bryna/Documents/Physics/RadCos/sullivan/'
-ian_path_dirs = ian_path + ['FHD', 'fhd\ utils', 'fhd_output', 'mwa\ analysis', 'single_use', 'utilities']
+ian_path = '/Users/bryna/Documents/Physics/FHD/'
+ian_path_dirs = ian_path + ['', 'fhd\ utils', 'fhd_output', 'fhd_core']
 
-path_dirs = [path_dirs, ian_path_dirs]
+path_dirs = [ps_path_dirs, path_dirs, ian_path_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
 
 ;!path = path_string + ':/home/dsmith/rhessi/code:' + !path

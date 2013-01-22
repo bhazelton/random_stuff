@@ -25,7 +25,7 @@ pro sim_uv_com, t32 = t32, define_baselines = define_baselines, baseline_spacing
      endif
   endelse
 
-  froot = rootdir('mwa') + 'simulations/'
+  froot = base_path('data') + 'fhd_simulations_old/'
   info_file = froot + 'sim_' + tag + 'info.idlsave'
   weights_file = froot + 'sim_' + tag + 'weights.idlsave'
 

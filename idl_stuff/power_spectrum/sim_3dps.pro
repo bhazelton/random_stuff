@@ -17,7 +17,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
   endif
 
   if n_elements(simfile) eq 0 then begin 
-     froot = base_path() + 'fhd/simulations/'
+     froot = base_path('data') + 'fhd_simulations_old/'
      simfile = froot + 'sim_496t_0025_uvf.idlsave'
   endif
 
@@ -64,8 +64,9 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      endelse
   endelse
 
-  info_file = froot + 'sim_' + array + '_info.idlsave'
-  weights_file = froot + 'sim_' + array + '_weights.idlsave'
+  array_filebase = froot + 'sim_' + array
+  info_file = array_filebase + '_info.idlsave'
+  weights_file = array_filebase + '_weights.idlsave'
 
   if keyword_set(psf) then begin
      filebase = 'psf_' + array + '_uvf'
@@ -88,8 +89,15 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
         'fit': filebase = filebase + '_cleanfit'
      endcase
   endif
-  if not keyword_set(eor_test) then $
-     if beam_exp eq 1 then filebase = filebase + '_beam' else if beam_exp eq 0 then filebase = filebase + '_holo'
+  if not keyword_set(eor_test) then begin
+     case beam_exp of
+        0: filebase = filebase + '_holo'
+        1: filebase = filebase + '_beam' 
+        2: filebase = filebase + '_truesky'
+        else: message, 'division by more than 2 factors of the primary beam is unsupported.'
+     endcase
+  endif
+
   if keyword_set(std_power) then filebase = filebase + '_sp'
   save_file = froot + filebase + '_power.idlsave'
 
@@ -207,11 +215,24 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
         else if n_elements(test_power_shape) ne 0 then sim_cube = test_power_cube $
         else begin
            sim_cube = uvf_cube * conv_factor
+           
+           if n_elements(my_model_uv) eq 0 then begin
+              my_source_array = fltarr(7, n_elements(my_sources[0,*]))
+              my_source_array[0,*]=my_sources[0,*] + dims[0]/2.
+              my_source_array[1,*]=my_sources[1,*] + dims[1]/2.
+              my_source_array[4,*]=my_sources[2,*]
+              my_source_array[5,*]=Round(my_source_array[0,*])+Round(my_source_array[1,*])*dims[0]
+              my_model_uv=visibility_source_uv_grid(my_source_array, timing=timing, u_dim=dims[0], v_dim=dims[1]) * norm_gridding
+              undefine, my_source_array
+              save, file=simfile, uvf_cube, my_sources, my_model_uv, norm_gridding
+           endif 
+
            undefine, my_sources
            ;; save initial uv slice   
            uv_slice = uvf_slice(reform(my_model_uv, n_kx, n_ky, 1), kx_mpc, ky_mpc, [mean(frequencies)], kperp_lambda_conv, $
                                 slice_axis = 2, slice_inds = 0, slice_savefile = initial_uv_savefile)
            undefine, my_model_uv
+
         endelse
      endelse
      undefine, uvf_cube
@@ -221,6 +242,28 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      wh_wt0 = where(weights_cube eq 0, count_wt0)
      ;; wh = where(weights_cube le 1e-10, count)
      if count_wt0 ne 0 then sigma2_cube[wh_wt0] = 0
+
+     ;; save weights slices
+     uf_savefile = array_filebase + '_weights_uf_plane.idlsave'
+     uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
+                slice_savefile = uf_savefile)
+
+     vf_savefile = array_filebase + '_weights_vf_plane.idlsave'
+     vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
+                slice_savefile = vf_savefile)
+
+     if max(abs(vf_slice)) eq 0 then begin
+        nloop = 0
+        while max(abs(vf_slice)) eq 0 do begin
+           nloop = nloop+1
+           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2+nloop, $
+                                slice_savefile = vf_savefile)
+        endwhile
+     endif
+
+     uv_savefile = array_filebase + '_weights_uv_plane.idlsave'
+     uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 2, slice_inds = 0, $
+                slice_savefile = uv_savefile)
      undefine, weights_cube
 
      mask = dblarr(n_kx, n_ky, n_kz) + 1
@@ -231,7 +274,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      undefine, mask
 
       print, 'pre-weighting sum(sim_cube^2)*z_delta:', total(abs(sim_cube)^2d)*z_mpc_delta
-;;if keyword_set(eor_only) then stop
+      ;;if keyword_set(eor_only) then stop
 
      ;; divide by weights (~array beam) to estimate true sky
      sim_cube = sim_cube * sigma2_cube
@@ -243,13 +286,12 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      if not keyword_set(eor_test) then begin
 
 
-        ;; Remove 1 or 2 factors of tile (primary) beam (in image space!) 
+        ;; divide by 1 or 2 factors of tile (primary) beam (in image space!) 
         ;; to go to detected frame or true sky frame
         if beam_exp gt 0 then begin
            for i = 0, n_freq - 1 do begin
- 
 
-              beam_base=fft_shift(real_part(FFT(fft_shift(tile_beam_uv[*,*,i]),/inverse)))
+              beam_base=tile_beam_image[*,*,i]
               beam_norm = max(beam_base)
               beam_base/=beam_norm
               beam_factor = (beam_base) ^ beam_exp
@@ -278,11 +320,11 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
            endfor
 
            ;; save some slices of the sim cube (after beam correction)
-           uf_savefile = froot + filebase + '_uf_plane_conv.idlsave'
+           uf_savefile = froot + filebase + '_uf_plane_beamcorr.idlsave'
            uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
                                 slice_savefile = uf_savefile)
            
-           vf_savefile = froot + filebase + '_vf_plane_conv.idlsave'
+           vf_savefile = froot + filebase + '_vf_plane_beamcorr.idlsave'
            vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
                                 slice_savefile = vf_savefile)
            
@@ -295,7 +337,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
               endwhile
            endif
 
-           uv_savefile = froot + filebase + '_uv_plane_conv.idlsave'
+           uv_savefile = froot + filebase + '_uv_plane_beamcorr.idlsave'
            uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 2, slice_inds = 0, $
                                 slice_savefile = uv_savefile)
            
@@ -588,7 +630,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
         sim_cube = temporary(new_cube)
      endif else undefine, mask
 
-     ;; save some slices of the sim cube (post cleaning)
+     ;; save some slices of the sim cube (post cleaning & applying 0 weight restrictions)
      uf_savefile = froot + filebase + '_uf_plane.idlsave'
      uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
                 slice_savefile = uf_savefile)
@@ -861,7 +903,11 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
   save, file = savefile_lin, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
 
  
-  plotfile_path = base_path() + 'power_spectrum/plots/'
+  plotfile_path = base_path('plots') + 'power_spectrum/'
+  wh_array = where(array eq ['32t', '512t', '496t'], count_array)
+  if count_array eq 1 then plotfile_path = plotfile_path + 'sim_' + array + '/' $
+  else plotfile_path = plotfile_path + 'sim_simple_baselines/'
+
   plotfile = plotfile_path + filebase + fadd + '_kspace_power'
   weight_plotfile = plotfile_path + filebase + fadd + '_kspace_weights'
 
@@ -958,7 +1004,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
   savefile = froot + filebase + fadd + '_1dkpower.idlsave'
   save, file = savefile, power, weights, k_edges, bins_per_decade
 
-  eor_file_1d = base_path() + 'power_spectrum/eor_data/eor_power_1d.idlsave'
+  eor_file_1d = base_path('data') + 'eor_data/eor_power_1d.idlsave'
   file_arr = [savefile, eor_file_1d]
   if keyword_set(eor_only) then begin
      if keyword_set(eor_test) then names_arr = 'Input EoR' else names_arr = 'Simulated EoR'

@@ -38,7 +38,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      if keyword_set(eor_test) then message, 'Cleaning is not compatible with eor_test'
   endif
 
-  froot = base_path() + 'fhd/simulations/'
+  froot = base_path('data') + 'fhd_simulations_old/'
 
   if keyword_set(baseline_layout) or keyword_set(baseline_spacing) then begin
      if n_elements(baseline_spacing) eq 0 then baseline_spacing = 4
@@ -122,7 +122,12 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      endcase
      fadd = fadd + clean_tag
   endif
-  if beam_exp eq 1 then fadd = fadd + '_beam' else if beam_exp eq 0 then fadd = fadd + '_holo'
+  case beam_exp of
+     0: fadd = fadd + '_holo'
+     1: fadd = fadd + '_beam'
+     2: fadd = fadd + '_truesky'
+     else: message, 'division by more than 2 factors of the primary beam is unsupported.'
+  endcase
   if keyword_set(std_power) then begin
      fadd = fadd + '_sp'
      eor_test_fadd = eor_test_fadd  + '_sp'
@@ -147,7 +152,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
   savefile_3d = froot + fbase_arr + fadd_3d + '_power.idlsave'
   savefiles_2d = froot + fbase_arr + fadd + fadd_2dbin + '_2dkpower.idlsave'
   savefiles_1d = froot + fbase_arr + fadd +'_1dkpower.idlsave'
-  eor_file_1d = base_path() + 'power_spectrum/eor_data/eor_power_1d.idlsave'
+  eor_file_1d = base_path('data') + 'eor_data/eor_power_1d.idlsave'
   eor_file_1d_input = froot + 'eortest' + tile_tag + '_uvf' + eor_test_fadd +'_1dkpower.idlsave'
 
   if keyword_set(clean_ratio) then begin
@@ -188,6 +193,12 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         if keyword_set(add_noise) then comp_fadd = comp_fadd + '_noise'
         if n_elements(clean_type) ne 0 then comp_fadd = comp_fadd + clean_tag
         if beam_exp eq 1 then comp_fadd = comp_fadd + '_beam' else if beam_exp eq 0 then comp_fadd = comp_fadd + '_holo'
+        case beam_exp of
+           0: comp_fadd = comp_fadd + '_holo'
+           1: comp_fadd = comp_fadd + '_beam'
+           2: comp_fadd = comp_fadd + '_truesky'
+           else: message, 'division by more than 2 factors of the primary beam is unsupported.'
+        endcase
         comp_add = comp_add + '_sp_nowt'
         if keyword_set(no_kzero) then comp_add = comp_add + '_nok0'
      endelse
@@ -355,7 +366,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
   if keyword_set(norm_2d) then plot_fadd = plot_fadd + '_norm'
   if keyword_set(grey_scale) then plot_fadd = plot_fadd + '_grey'
 
-  plotfile_path = base_path() + 'power_spectrum/plots/' + plot_folder
+  plotfile_path = base_path('plots') + 'power_spectrum/' + plot_folder
   if n_sims eq 1 then plotfile_base = plotfile_path + sim_plot_folder + 'sim' + tile_tag + '_' + names[sim_num] + fadd $
   else plotfile_base = plotfile_path + sim_plot_folder + 'sim' + tile_tag + '_' + strjoin(string(sim_num, format='(i1)')) + fadd
   if keyword_set(clean_ratio) then plotfile_2d = plotfile_base + fadd_2dbin + clean_tag + '_ratio' + plot_fadd + '.eps' $

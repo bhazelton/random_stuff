@@ -40,7 +40,7 @@ function eor_sim, kx_arr, ky_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   n_ky = n_elements(ky_mpc)
   n_kz = n_elements(kz_mpc)
 
-  restore, base_path() + 'power_spectrum/eor_data/eor_power_1d.idlsave' ;;k_centers, power
+  restore, base_path('data') + 'eor_data/eor_power_1d.idlsave' ;;k_centers, power
 
   npts_log = n_elements(k_centers)
 
@@ -79,12 +79,12 @@ function eor_sim, kx_arr, ky_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   kperp_edges = kperp_edges_mpc
   kpar_edges = kpar_edges_mpc
 
-  filename = base_path() + 'power_spectrum/eor_data/sim_2d.idlsave'
+  filename = base_path('data') + 'eor_data/sim_2d.idlsave'
   save, file = filename, power, weights, kperp_edges, kpar_edges
   power = temp
 
   kperp_plot_range = [min(kperp_edges), 0.3]
-  plotfile = base_path() + 'power_spectrum/plots/eor_sim_initial_kspace_power'
+  plotfile = base_path('plots') + 'power_spectrum/eor_sim_initial_kspace_power'
   kpower_2d_plots, filename, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = [1e4, 1e8], $
                    title = 'EoR Power', pub = pub, plotfile = plotfile
 
@@ -98,11 +98,11 @@ function eor_sim, kx_arr, ky_arr, freq_arr, seed = seed, flat_sigma = flat_sigma
   weights = weights_1d  
   k_edges = k_edges_mpc
 
-  filename = base_path() + 'power_spectrum/eor_data/sim_1d.idlsave'
+  filename = base_path('data') + 'eor_data/sim_1d.idlsave'
   save, file = filename, power, weights, k_edges, bins_per_decade
   power = temp
 
-  eor_file_1d = base_path() + 'power_spectrum/eor_data/eor_power_1d.idlsave'
+  eor_file_1d = base_path('data') + 'eor_data/eor_power_1d.idlsave'
   file_arr = [filename, eor_file_1d]
   names_arr = ['Constructed EoR cube', 'EoR signal']
   colors_arr = [0, 254]

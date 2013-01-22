@@ -1,6 +1,7 @@
 pro eor_power_spectrum
 
-  filename = base_path() + 'power_spectrum/eor_data/z8_mwa_t300_f2.dat'
+  froot = base_path('data') + 'eor_data/'
+  filename = 'z8_mwa_t300_f2.dat'
   n_header_lines = 7
   record = {k21:0d, p21:0d, error:0d, upper:0d, lower:0d, del_0sq:0d, d_del_0sq:0d, del_2sq:0d, d_del_2sq:0d, $
             del_4sq:0d, d_del_4sq:0d}
@@ -31,7 +32,7 @@ pro eor_power_spectrum
   ;; so power = delta^2 * (2pi^2) / k^3
   power = data.p21 * (2d * !dpi^2d) / k_centers^3
  
-  savefile = base_path() + 'power_spectrum/eor_data/eor_power_1d.idlsave'
+  savefile = froot + 'eor_power_1d.idlsave'
   save, file = savefile, power, k_centers
 
 end

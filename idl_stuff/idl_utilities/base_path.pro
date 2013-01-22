@@ -1,10 +1,13 @@
-function base_path, data=data, plots=plots
+function base_path, type
 
-  if n_elements(data) ne 0 and n_elements(plots) ne 0 then message, 'data and plots options cannot be used simultaneously'
-
-  if n_elements(data) ne 0 then path = '/Users/bryna/Documents/Physics/idl_data_files/'
-  if n_elements(plots) ne 0 then path = '/Users/bryna/Documents/Physics/idl_plots/'
-  if n_elements(path) ne 0 then path = '/Users/bryna/Documents/Physics/bryna_git/idl_stuff/'
+  
+  if n_elements(type) ne 0 then begin
+     case type of
+        'data': path = '/Users/bryna/Documents/Physics/idl_data_files/'
+        'plots': path = '/Users/bryna/Documents/Physics/idl_plots/'
+        else: message, 'type modifier not recognized.'
+     endcase
+  endif else path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
   return, path
 end
