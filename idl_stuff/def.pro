@@ -3,14 +3,14 @@
 git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
 path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro', 'mwa', $
-                        'power_spectrum', 'fhd_sims', 'single_use', 'textoidl', $
+                        'power_spectrum', 'fhd_sims', 'single_use', $
                         'Healpix_2.15a/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
                                                     ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + $
                                                     ['cgis', 'obsolete_astron']]] ;; , $
                          ;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
                          ;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
 
-ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wappers']
+ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wappers', 'textoidl']
 
 ian_path = '/Users/bryna/Documents/Physics/FHD/'
 ian_path_dirs = ian_path + ['', 'fhd\ utils', 'fhd_output', 'fhd_core']
