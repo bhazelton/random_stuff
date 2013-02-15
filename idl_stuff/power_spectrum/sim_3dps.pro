@@ -1,7 +1,9 @@
 
 pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, $
               no_weighting = no_weighting, add_noise = add_noise, pub = pub, fill_holes = fill_holes, quiet = quiet, $
-              eor_only = eor_only, test_power_shape = test_power_shape, eor_test = eor_test, clean_type = clean_type
+              eor_only = eor_only, test_power_shape = test_power_shape, eor_test = eor_test, clean_type = clean_type, $
+              log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, $
+              k1d_bin = k1d_bin
 
   if n_elements(fill_holes) eq 0 then fill_holes = 0
   if n_elements(beam_exp) eq 0 then beam_exp = 0
@@ -142,7 +144,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      
      z0_freq = 1420.40 ;; MHz
      redshifts = z0_freq/frequencies - 1
-     cosmology_measures, redshifts, comoving_dist_los = comov_dist_los
+     cosmology_measures, redshifts, comoving_dist_los = comov_dist_los, hubble_param = hubble_param
      
      comov_los_diff = comov_dist_los - shift(comov_dist_los, -1)
      comov_los_diff = comov_los_diff[0:n_elements(comov_dist_los)-2]
@@ -150,6 +152,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      if max(freq_diff-freq_diff[0]) gt 1e-12 then begin
         ;; frequencies are not evenly spaced, need to be careful about z_mpc_delta/mean
         
+        f_delta = freq_resolution
         nominal_freqs = dindgen(floor(((max(frequencies)-min(frequencies))/freq_resolution))+1)*freq_resolution + min(frequencies)
         nominal_z = z0_freq/nominal_freqs - 1
         comoving_distance_los, nominal_z, nominal_comov_dist_los
@@ -161,6 +164,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
         
      endif else begin
         
+        f_delta = freq_diff[0]
         z_mpc_delta = mean(comov_los_diff)
         z_mpc_mean = mean(comov_dist_los)
         n_kz = n_freq
@@ -204,6 +208,9 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
      conv_factor = 2d * max_baseline^2d / (!dpi * 1.38)
 
      kperp_lambda_conv = z_mpc_mean / (2d*!pi)
+     delay_delta = 1e9/(n_freq*f_delta*1e6) ;; equivilent delay bin size for kparallel
+     delay_max = delay_delta * n_freq/2d ;; factor of 2 b/c of neg/positive
+     delay_params = [delay_delta, delay_max]     
 
      if max(abs(imaginary(weights_cube))) eq 0 then weights_cube = real_part(weights_cube) $
      else stop
@@ -230,7 +237,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
            undefine, my_sources
            ;; save initial uv slice   
            uv_slice = uvf_slice(reform(my_model_uv, n_kx, n_ky, 1), kx_mpc, ky_mpc, [mean(frequencies)], kperp_lambda_conv, $
-                                slice_axis = 2, slice_inds = 0, slice_savefile = initial_uv_savefile)
+                                delay_params, hubble_param, slice_axis = 2, slice_inds = 0, slice_savefile = initial_uv_savefile)
            undefine, my_model_uv
 
         endelse
@@ -245,25 +252,26 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
 
      ;; save weights slices
      uf_savefile = array_filebase + '_weights_uf_plane.idlsave'
-     uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
-                slice_savefile = uf_savefile)
+     uf_slice = uvf_slice(weights_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 1, $
+                          slice_inds = n_ky/2, slice_savefile = uf_savefile)
 
      vf_savefile = array_filebase + '_weights_vf_plane.idlsave'
-     vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
-                slice_savefile = vf_savefile)
+     vf_slice = uvf_slice(weights_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 0, $
+                          slice_inds = n_kx/2, slice_savefile = vf_savefile)
 
      if max(abs(vf_slice)) eq 0 then begin
         nloop = 0
         while max(abs(vf_slice)) eq 0 do begin
            nloop = nloop+1
-           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2+nloop, $
-                                slice_savefile = vf_savefile)
+           vf_slice = uvf_slice(weights_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, $
+                                slice_axis = 0, slice_inds = n_kx/2+nloop, slice_savefile = vf_savefile)
         endwhile
      endif
 
      uv_savefile = array_filebase + '_weights_uv_plane.idlsave'
-     uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 2, slice_inds = 0, $
-                slice_savefile = uv_savefile)
+     uv_slice = uvf_slice(weights_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 2, $
+                          slice_inds = 0, slice_savefile = uv_savefile)
+
      undefine, weights_cube
 
      mask = dblarr(n_kx, n_ky, n_kz) + 1
@@ -321,25 +329,26 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
 
            ;; save some slices of the sim cube (after beam correction)
            uf_savefile = froot + filebase + '_uf_plane_beamcorr.idlsave'
-           uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
-                                slice_savefile = uf_savefile)
+           uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 1, $
+                                slice_inds = n_ky/2, slice_savefile = uf_savefile)
            
            vf_savefile = froot + filebase + '_vf_plane_beamcorr.idlsave'
-           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
-                                slice_savefile = vf_savefile)
+           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 0, $
+                                slice_inds = n_kx/2, slice_savefile = vf_savefile)
            
            if max(abs(vf_slice)) eq 0 then begin
               nloop = 0
               while max(abs(vf_slice)) eq 0 do begin
                  nloop = nloop+1
-                 vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, $
+                 vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, $
+                                      slice_axis = 0, $
                                       slice_inds = n_kx/2+nloop, slice_savefile = vf_savefile)
               endwhile
            endif
 
            uv_savefile = froot + filebase + '_uv_plane_beamcorr.idlsave'
-           uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 2, slice_inds = 0, $
-                                slice_savefile = uv_savefile)
+           uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 2, $
+                                slice_inds = 0, slice_savefile = uv_savefile)
            
         endif
      endif
@@ -632,25 +641,25 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
 
      ;; save some slices of the sim cube (post cleaning & applying 0 weight restrictions)
      uf_savefile = froot + filebase + '_uf_plane.idlsave'
-     uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 1, slice_inds = n_ky/2, $
-                slice_savefile = uf_savefile)
+     uf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 1, $
+                          slice_inds = n_ky/2, slice_savefile = uf_savefile)
 
      vf_savefile = froot + filebase + '_vf_plane.idlsave'
-     vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
-                slice_savefile = vf_savefile)
+     vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 0, $
+                          slice_inds = n_kx/2, slice_savefile = vf_savefile)
 
      if max(abs(vf_slice)) eq 0 then begin
         nloop = 0
         while max(abs(vf_slice)) eq 0 do begin
            nloop = nloop+1
-           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2+nloop, $
-                                slice_savefile = vf_savefile)
+           vf_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 0, $
+                                slice_inds = n_kx/2+nloop, slice_savefile = vf_savefile)
         endwhile
      endif
 
      uv_savefile = froot + filebase + '_uv_plane.idlsave'
-     uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, slice_axis = 2, slice_inds = 0, $
-                slice_savefile = uv_savefile)
+     uv_slice = uvf_slice(sim_cube, kx_mpc, ky_mpc, frequencies, kperp_lambda_conv, delay_params, hubble_param, slice_axis = 2, $
+                          slice_inds = 0, slice_savefile = uv_savefile)
 
      ;; need to cut uvf cubes in half because image is real -- we'll cut in v
      sim_cube = sim_cube[*, n_ky/2:n_ky-1,*]
@@ -845,7 +854,8 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
 
      endelse
 
-     save, file = save_file, power_3d, weights_3d, kx_mpc, ky_mpc, kz_mpc, kperp_lambda_conv, n_freq_contrib
+     save, file = save_file, power_3d, weights_3d, kx_mpc, ky_mpc, kz_mpc, kperp_lambda_conv, delay_params, hubble_param, $
+           n_freq_contrib
 
   endif else restore, save_file
 
@@ -864,54 +874,33 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
   endif
 
   fadd = ''
-  if keyword_set(no_weighting) then fadd = fadd + '_nowt'
+  if keyword_set(no_weighted_averaging) then fadd = fadd + '_nowtave'
   if keyword_set(no_kzero) then fadd = fadd + '_nok0'
-  if keyword_set(fill_holes) then fadd = fadd + '_nohole'
 
-  savefile = froot + filebase + fadd + '_2dkpower.idlsave'
-  savefile_lin = froot + filebase + fadd + '_linkpar_2dkpower.idlsave'
+  fadd_2d = ''
+  if keyword_set(fill_holes) then fadd_2d = fadd_2d + '_nohole'
+  if keyword_set(log_kpar) then fadd_2d = fadd_2d + '_logkpar'
+  if keyword_set(log_kperp) then fadd_2d = fadd_2d + '_logkperp'
+
+  savefile = froot + filebase + fadd + fadd_2d + '_2dkpower.idlsave'
 
   print, 'Binning to 2D power spectrum'
-
-  bins_per_decade = 8
   if keyword_set(no_weighting) then $
-     power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                       binned_weights = binned_weights, bins = bins_per_decade, fill_holes = fill_holes) $
-  else power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                         weights = weights_3d, binned_weights = binned_weights, bins = bins_per_decade, $
-                                         fill_holes = fill_holes)
+     power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, log_kpar = log_kpar, $
+                                       log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                       binned_weights = binned_weights, fill_holes = fill_holes) $
+  else power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, log_kpar = log_kpar, $
+                                       log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                       weights = weights_3d, binned_weights = binned_weights, fill_holes = fill_holes)
+
   power = power_rebin
   kperp_edges = kperp_edges_mpc
   kpar_edges = kpar_edges_mpc
   weights = binned_weights
   
-  save, file = savefile, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
-
-  ;; also bin with linear k_par
-
-  if keyword_set(no_weighting) then $
-     power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, /linear_kpar, $
-                                       binned_weights = binned_weights, bins = bins_per_decade, fill_holes = fill_holes) $
-  else power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, /linear_kpar, $
-                                         weights = weights_3d, binned_weights = binned_weights, bins = bins_per_decade, $
-                                         fill_holes = fill_holes)
-  power = power_rebin
-  kperp_edges = kperp_edges_mpc
-  kpar_edges = kpar_edges_mpc
-  weights = binned_weights
-  
-  save, file = savefile_lin, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
+  save, file = savefile, power, weights, kperp_edges, kpar_edges, kperp_bin, kpar_bin, kperp_lambda_conv, delay_params, hubble_param
 
  
-  plotfile_path = base_path('plots') + 'power_spectrum/'
-  wh_array = where(array eq ['32t', '512t', '496t'], count_array)
-  if count_array eq 1 then plotfile_path = plotfile_path + 'sim_' + array + '/' $
-  else plotfile_path = plotfile_path + 'sim_simple_baselines/'
-
-  plotfile = plotfile_path + filebase + fadd + '_kspace_power'
-  weight_plotfile = plotfile_path + filebase + fadd + '_kspace_weights'
-
-  kperp_plot_range = [min(kperp_edges), 0.3]
   if not keyword_set(quiet) then begin
      kpower_2d_plots, savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = data_range, pub = pub, plotfile = plotfile
@@ -921,88 +910,46 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
 
   ;; now do slices    
   yslice_savefile = froot + filebase + '_xz_plane.idlsave'
-  yslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, slice_axis = 1, slice_inds = 0, $
-                       slice_weights = yslice_weights, slice_savefile = yslice_savefile)
+  yslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, delay_params, hubble_param, $
+                              slice_axis = 1, slice_inds = 0, slice_weights = yslice_weights, slice_savefile = yslice_savefile)
 
   xslice_savefile = froot + filebase + '_yz_plane.idlsave'
-  xslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, slice_axis = 0, slice_inds = n_kx/2, $
-                              slice_weights = xslice_weights, slice_savefile = xslice_savefile)
+  xslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, delay_params, hubble_param, $
+                              slice_axis = 0, slice_inds = n_kx/2,  slice_weights = xslice_weights, slice_savefile = xslice_savefile)
   if max(xslice_power) eq 0 then begin
      nloop = 0
      while max(xslice_power) eq 0 do begin
          nloop = nloop+1
-         xslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, slice_axis = 0, $
-                                     slice_inds = n_kx/2+nloop, slice_weights = xslice_weights, slice_savefile = xslice_savefile)
+         xslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, delay_params, hubble_param, $
+                                     slice_axis = 0, slice_inds = n_kx/2+nloop, slice_weights = xslice_weights, $
+                                     slice_savefile = xslice_savefile)
      endwhile
   endif
 
   zslice_savefile = froot + filebase + '_xy_plane.idlsave'
-  zslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, slice_axis = 2, slice_inds = 1, $
-                       slice_weights = zslice_weights, slice_savefile = zslice_savefile)
-
-  ;; also make binned versions of x & y slices
-  yslice_binned_savefile = froot + filebase + fadd + '_xz_plane_binned.idlsave'
-  if keyword_set(no_weighting) then $
-    yslice_power_rebin = kspace_rebinning_2d(yslice_power, kx_mpc, [ky_mpc[0]], kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                             binned_weights = binned_weights, bins = bins_per_decade, fill_holes = fill_holes) $
-  else yslice_power_rebin = kspace_rebinning_2d(yslice_power, kx_mpc, [ky_mpc[0]], kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                               weights = yslice_weights, binned_weights = binned_weights, bins = bins_per_decade, $
-                                               fill_holes = fill_holes)
-     
-  power = yslice_power_rebin
-  kperp_edges = kperp_edges_mpc
-  kpar_edges = kpar_edges_mpc
-  weights = binned_weights
-  
-  save, file = yslice_binned_savefile, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
-  
-  if not keyword_set(quiet) then begin
-     kpower_2d_plots, yslice_binned_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
-                      data_range = data_range, pub = pub, window_num = 3, title = 'XZ plane'
-  endif
-
-
-  xslice_binned_savefile = froot + filebase + fadd + '_yz_plane_binned.idlsave'
-  if keyword_set(no_weighting) then $
-    xslice_power_rebin = kspace_rebinning_2d(xslice_power, [kx_mpc[n_kx/2]], ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                             binned_weights = binned_weights, bins = bins_per_decade, fill_holes = fill_holes) $
-  else xslice_power_rebin = kspace_rebinning_2d(xslice_power, [kx_mpc[n_kx/2]], ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                               weights = xslice_weights, binned_weights = binned_weights, bins = bins_per_decade, $
-                                               fill_holes = fill_holes)
-     
-  power = xslice_power_rebin
-  kperp_edges = kperp_edges_mpc
-  kpar_edges = kpar_edges_mpc
-  weights = binned_weights
-  
-  save, file = xslice_binned_savefile, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
-     
-  if not keyword_set(quiet) then begin
-     kpower_2d_plots, xslice_binned_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
-                      data_range = data_range, pub = pub, window_num = 4, title = 'YZ plane'
-  endif
-
-
+  zslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, delay_params, hubble_param, $
+                              slice_axis = 2, slice_inds = 1, slice_weights = zslice_weights, slice_savefile = zslice_savefile)
 
 
   print, 'Binning to 1D power spectrum'
-  plotfile = plotfile_path + filebase + fadd + '_1d_power'
-
-  bins_per_decade = 10d
   if keyword_set(no_weighting) then $
-     power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, bins = bins_per_decade, $
+     power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, k_bin = k1d_bin, log_k = log_k1d, $
                                     binned_weights = weights_1d, mask = mask, pixelwise_mask = pixelwise_mask, k1_mask = k1_mask, $
-                                    k2_mask = k2_mask,  k3_mask = k3_mask, edge_on_grid = edge_on_grid, match_datta = match_datta)$
-  else power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, bins = bins_per_decade, weights = weights_3d, $
-                                      binned_weights = weights_1d, mask = mask, pixelwise_mask = pixelwise_mask, k1_mask = k1_mask, $
-                                      k2_mask = k2_mask,  k3_mask = k3_mask, edge_on_grid = edge_on_grid, match_datta = match_datta)
-
+                                    k2_mask = k2_mask,  k3_mask = k3_mask, edge_on_grid = edge_on_grid, match_datta = match_datta) $
+  else power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, k_bin = k1d_bin, log_k = log_k1d, $
+                                    weights = weights_3d, binned_weights = weights_1d, mask = mask, pixelwise_mask = pixelwise_mask, $
+                                    k1_mask = k1_mask, k2_mask = k2_mask,  k3_mask = k3_mask, edge_on_grid = edge_on_grid, $
+                                    match_datta = match_datta)
   power = power_1d
   weights = weights_1d
   k_edges = k_edges_mpc
+  k_bin = k1d_bin
 
-  savefile = froot + filebase + fadd + '_1dkpower.idlsave'
-  save, file = savefile, power, weights, k_edges, bins_per_decade
+  fadd_1d = ''
+  if keyword_set(log_k) then fadd_1d = fadd_1d + '_logk'
+
+  savefile = froot + filebase + fadd + fadd_1d + '_1dkpower.idlsave'
+  save, file = savefile, power, weights, k_edges, k_bin, hubble_param
 
   eor_file_1d = base_path('data') + 'eor_data/eor_power_1d.idlsave'
   file_arr = [savefile, eor_file_1d]

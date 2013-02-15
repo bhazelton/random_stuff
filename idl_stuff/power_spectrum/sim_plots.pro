@@ -7,10 +7,11 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                cont_data_lims = cont_data_lims, eor_only = eor_only, test_power_shape = test_power_shape, eor_test = eor_test, $
                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, slice_nobin = slice_nobin, $
                undefined_data_range = undefined_data_range, slice_linear_axes = slice_linear_axes, use_outliers = use_outliers, $
-               baseline_axis = baseline_axis, plot_uvf = plot_uvf, plot_urange = plot_urange, plot_vrange = plot_vrange, $
-               uvf_data_range = uvf_data_range, uvf_conv = uvf_conv, uvf_type = uvf_type, clean_type = clean_type, $
-               clean_ratio = clean_ratio, delta = delta, eor_ratio = eor_ratio, linear_kpar = linear_kpar, off_axis = off_axis, $
-               full_sky = full_sky, source_radius = source_radius
+               baseline_axis = baseline_axis, delay_axis = delay_axis, plot_uvf = plot_uvf, plot_urange = plot_urange, $
+               plot_vrange = plot_vrange, uvf_data_range = uvf_data_range, uvf_conv = uvf_conv, uvf_type = uvf_type, $
+               clean_type = clean_type, clean_ratio = clean_ratio, delta = delta, eor_ratio = eor_ratio, log_kpar = log_kpar, $
+               log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, $
+               off_axis = off_axis, full_sky = full_sky, source_radius = source_radius
 
   if n_elements(beam_exp) eq 0 then beam_exp = 0
   if keyword_set(eor_test) then eor_only = 1
@@ -25,8 +26,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
   ;; default to including baseline axis
   if n_elements(baseline_axis) eq 0 then baseline_axis = 1
-  ;; default to linear kparallel bins
-  if n_elements(linear_kpar) eq 0 then linear_kpar = 1
+  ;; default to including delay axis
+  if n_elements(delay_axis) eq 0 then delay_axis = 1
 
   if keyword_set(clean_ratio) and n_elements(clean_type) eq 0 then clean_type = 'hmf'
   clean_type_enum = ['hmf', 'iterate', 'fit']
@@ -144,7 +145,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
   fadd_2dbin = ''
   if keyword_set(fill_holes) then fadd_2dbin = fadd_2dbin + '_nohole'
-  if keyword_set(linear_kpar) then fadd_2dbin = fadd_2dbin + '_linkpar'
+  if keyword_set(log_kpar) then fadd_2d = fadd_2d + '_logkpar'
+  if keyword_set(log_kperp) then fadd_2d = fadd_2d + '_logkperp'
 
   fbase_arr = 'sim' + tile_tag + '_' + names[sim_num] + '_uvf'
   sim_file = froot + fbase_arr + '.idlsave'
@@ -173,7 +175,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
  
      reg_fadd_2dbin = ''
      if keyword_set(fill_holes) then reg_fadd_2dbin = reg_fadd_2dbin + '_nohole'
-     if keyword_set(linear_kpar) then reg_fadd_2dbin = reg_fadd_2dbin + '_linkpar'
+     if keyword_set(log_kpar) then fadd_2d = fadd_2d + '_logkpar'
+     if keyword_set(log_kperp) then fadd_2d = fadd_2d + '_logkperp'
 
      reg_savefile_3d = froot + fbase_arr + reg_fadd_3d + '_power.idlsave'
      reg_savefiles_2d = froot + fbase_arr + reg_fadd + reg_fadd_2dbin + '_2dkpower.idlsave'
@@ -213,25 +216,30 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
   for i=0, n_sims-1 do begin
      if ftests[i] eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file[i], $
         refresh = refresh_ps, no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, no_weighting = no_weighting, $
-        add_noise = add_noise, clean_type = clean_type, fill_holes = fill_holes, /quiet
+        add_noise = add_noise, clean_type = clean_type, fill_holes = fill_holes, log_kpar = log_kpar, log_kperp = log_kperp, $
+        kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet
 
      if keyword_set(clean_ratio) then begin
         ;; make regular file if it's missing
         if ftests_reg[i] eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file[i], $
            refresh = refresh_ps, no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, no_weighting = no_weighting, $
-           add_noise = add_noise, fill_holes = fill_holes, /quiet
+           add_noise = add_noise, fill_holes = fill_holes, log_kpar = log_kpar, log_kperp = log_kperp, $
+           kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet
      endif else if keyword_set(compare_1d) then begin
         ;; make comparision file if it's missing
         if ftests_1d_comp[i] eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file[i], $
            refresh = refresh_ps, beam_exp = beam_exp, /std_power, /no_weighting, no_kzero = no_kzero, add_noise = add_noise, $
-           clean_type = clean_type, fill_holes = fill_holes, /quiet
+           clean_type = clean_type, fill_holes = fill_holes, log_kpar = log_kpar, log_kperp = log_kperp, $
+           kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet
      endif
   endfor
 
   ;; test for input 1D EOR file
   ftests_input_eor = file_test(eor_file_1d_input) *  (1 - file_test(eor_file_1d_input, /zero_length))
-  if ftests_input_eor eq 0 then sim_3dps, sim_file, /eor_test, no_kzero = no_kzero, std_power = std_power, $
-                                          no_weighting = no_weighting, fill_holes = fill_holes, /quiet
+  if ftests_input_eor eq 0 then $
+     sim_3dps, sim_file, /eor_test, no_kzero = no_kzero, std_power = std_power, no_weighting = no_weighting, fill_holes = fill_holes, $
+               log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, $
+               k1d_bin = k1d_bin, /quiet
 
 
   if keyword_set(psf) then begin
@@ -242,7 +250,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
      if psf_ftest eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file, /psf, $
         refresh = refresh_ps,  no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, no_weighting = no_weighting, $
-        add_noise = add_noise, clean_type = clean_type, fill_holes = fill_holes, /quiet
+        add_noise = add_noise, clean_type = clean_type, fill_holes = fill_holes, log_kpar = log_kpar, log_kperp = log_kperp, $
+        kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet
   endif
 
   if keyword_set(eor_only) then begin
@@ -261,7 +270,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
     
      if eor_ftest eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file, /eor_only, $
         refresh = refresh_ps,  no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, no_weighting = no_weighting, $
-        add_noise = add_noise, fill_holes = fill_holes, clean_type = clean_type, /quiet, eor_test = eor_test
+        add_noise = add_noise, fill_holes = fill_holes, clean_type = clean_type, log_kpar = log_kpar, log_kperp = log_kperp, $
+        kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet, eor_test = eor_test
   endif
 
   if n_elements(test_power_shape) ne 0 then begin
@@ -277,7 +287,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      
      if test_power_ftest eq 0 or keyword_set(refresh_ps) or keyword_set(refresh_binning) then sim_3dps, sim_file, $
         refresh = refresh_ps,  no_kzero = no_kzero, beam_exp = beam_exp, std_power = std_power, no_weighting = no_weighting, $
-        add_noise = add_noise, fill_holes = fill_holes, clean_type = clean_type, /quiet, test_power_shape = test_power_shape
+        add_noise = add_noise, fill_holes = fill_holes, clean_type = clean_type, log_kpar = log_kpar, log_kperp = log_kperp, $
+        kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, /quiet, test_power_shape = test_power_shape
   endif
 
   restore, savefiles_2d[0]
@@ -395,7 +406,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_psf, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = psf_data_range, pub = pub, plotfile = psf_plotfile, title = 'PSF', window_num = 9, $
                       norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                      baseline_axis = baseline_axis
+                      baseline_axis = baseline_axis, delay_axis = delay_axis
                      
   endif
 
@@ -406,7 +417,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_eor, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = eor_data_range, pub = pub, plotfile = eor_plotfile, title = 'EoR ' + eor_tag, $
                       window_num = 10, norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                      wedge_amp = wedge_amp, baseline_axis = baseline_axis
+                      wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
   endif
 
   if n_elements(test_power_shape) ne 0 then begin
@@ -423,7 +434,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_test_power, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = test_data_range, pub = pub, plotfile = test_power_plotfile, $
                       title = test_power_shape + ' Power test', window_num = 10, norm_2d = norm_2d, grey_scale = grey_scale, $
-                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis
+                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
   endif
   
   if keyword_set(full_sky) then begin
@@ -453,7 +464,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
      kpower_2d_plots, savefiles_2d[0], /plot_weights, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       pub = pub, plotfile = weight_plotfile, window_num = 11, norm_2d = norm_2d, grey_scale = grey_scale, $
-                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis
+                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
   endif
 
   if n_sims eq 1 then begin
@@ -469,9 +480,9 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      else title_note =  ' [' + deg_offset_str[sim_num] + '!Uo!N, 0!Uo!N]'
 
      kpower_2d_plots, file_arr_2d, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
-                      data_range = data_range, pub = pub, plotfile = plotfile_2d, $
-                      title = array + ' ' + title_note, norm_2d = norm_2d, grey_scale = grey_scale, $
-                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, ratio = ratio
+                      data_range = data_range, pub = pub, plotfile = plotfile_2d, title = array + ' ' + title_note, $
+                      norm_2d = norm_2d, grey_scale = grey_scale,  plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
+                      baseline_axis = baseline_axis, delay_axis = delay_axis, ratio = ratio
      
      file_arr = [savefiles_1d, eor_file_1d_input, eor_file_1d]
      names_arr = ['Simulation PS', 'input EoR', 'general EoR']
@@ -508,12 +519,12 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            kpower_slice_plot, yslice_savefile, data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, $
                               window_num = 3, title = array + ' XZ plane ' + title_note, $
                               grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
            
            kpower_slice_plot, xslice_savefile, data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, $
                               window_num = 4, title = array + ' YZ plane ' + title_note, $
                               grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
         endif else begin
            yslice_savefile = froot + fbase_arr + fadd_3d + '_xz_plane_binned.idlsave'
 
@@ -521,21 +532,21 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                             data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, window_num = 3, $
                             title = array + ' XZ plane ' + title_note, norm_2d = norm_2d, $
                             grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                            baseline_axis = baseline_axis
+                            baseline_axis = baseline_axis, delay_axis = delay_axis
            
            xslice_savefile = froot + fbase_arr + fadd_3d + '_yz_plane_binned.idlsave'
            
            kpower_2d_plots, xslice_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                             data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, window_num = 4, $
                             title = array + ' YZ plane ' + title_note, norm_2d = norm_2d, $
-                            grey_scale = grey_scale, baseline_axis = baseline_axis
+                            grey_scale = grey_scale, baseline_axis = baseline_axis, delay_axis = delay_axis
         endelse
 
         zslice_savefile = froot + fbase_arr + fadd_3d + '_xy_plane.idlsave'
 
         kpower_slice_plot, zslice_savefile, data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, $
-                           window_num = 5, title = array + ' XY plane ' + title_note, $
-                           grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                           window_num = 5, title = array + ' XY plane ' + title_note, grey_scale = grey_scale, $
+                           linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
      endif
 
      if keyword_set(plot_uvf) then begin
@@ -578,45 +589,9 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
      ncol = ceil(sqrt(n_sims))
      nrow = ceil(n_sims / double(ncol))
-     positions = fltarr(4, ncol*nrow)
+     start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
 
-     row_val = reverse(reform(rebin(indgen(nrow), nrow, ncol), ncol*nrow))
-     col_val = reform(rebin(reform(indgen(ncol), 1, ncol), nrow, ncol), ncol*nrow)
-
-     if keyword_set(pub) then begin
-        xmargin = 0.025
-        ymargin = 0.025
-     endif else begin
-        xmargin = 0.0125
-        ymargin = 0.0125
-     endelse
-
-     positions[0,*] = col_val/double(ncol)+xmargin
-     positions[1,*] = row_val/double(nrow)+ymargin
-     positions[2,*] = (col_val+1)/double(ncol)-xmargin
-     positions[3,*] = (row_val+1)/double(nrow)-ymargin
-
-     max_ysize = 800
-     if n_sims gt 9 then begin
-        multi_aspect =0.9 
-        xsize = round((max_ysize/nrow) * ncol/multi_aspect)
-        ysize = max_ysize
-     endif else begin
-        if keyword_set(baseline_axis) then multi_aspect = 0.75 else multi_aspect =0.5
-        xsize = round((max_ysize/nrow) * ncol/multi_aspect)
-        ysize = max_ysize
-     endelse
      window_num = 1
-     if windowavailable(window_num) then begin 
-        wset, window_num
-        if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-     endif else make_win = 1
-     if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-     erase
-
-     if keyword_set(pub) then begin
-        pson, file = plotfile_2d, /eps
-     endif
 
      for i=0, n_sims-1 do begin
         if keyword_set(clean_ratio) then begin
@@ -626,13 +601,20 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            file_arr_2d = [savefile_eor, savefiles_2d[i]]
            ratio = 1
         endif else file_arr_2d = savefiles_2d[i]
+ 
+        if i gt 0 then pos_use = positions[*,i]
 
-        kpower_2d_plots, file_arr_2d, multi_pos = positions[*,i], multi_aspect = multi_aspect, $
+        kpower_2d_plots, file_arr_2d, multi_pos = pos_use, start_multi_params = start_multi_params, $
                          kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, pub = pub, $
                          title = array + ' [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', norm_2d = norm_2d, grey_scale = grey_scale, $
                          plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, $
-                         ratio = ratio
+                         delay_axis = delay_axis, ratio = ratio, plotfile = plotfile_2d, window_num = window_num
         if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
+
+        if i eq 0 then begin
+           positions = pos_use
+           undefine, start_multi_params
+        endif
      endfor
 
      if keyword_set(pub) then begin
@@ -678,36 +660,38 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      if keyword_set(plot_slice) then begin
 
         window_num = 3
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
-        if keyword_set(pub) then begin
-           pson, file = yslice_plotfile, /eps
-        endif
+
         if keyword_set(slice_nobin) then yslice_savefiles = froot + fbase_arr + fadd_3d + '_xz_plane.idlsave' $
         else yslice_savefiles = savefile_base + '_xz_plane_binned.idlsave'
 
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
+
         for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i]
+        
            if keyword_set(slice_nobin) then begin
 
-              kpower_slice_plot, yslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
-                                 data_range = slice_data_range, pub = pub, plotfile = plotfile, $
+              kpower_slice_plot, yslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
+                                 data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, window_num = window_num, $
                                  title = array + ' XZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
                                  grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], $
-                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
            endif else begin
-              kpower_2d_plots, yslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
+              kpower_2d_plots, yslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
                                kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = slice_data_range, $
-                               title = array + ' XZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, plotfile = plotfile, $
+                               title = array + ' XZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
+                               plotfile = yslice_plotfile, window_num = window_num, $
                                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis
+                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis
            endelse
 
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
+           if i eq 0 then begin
+              positions = pos_use
+              undefine, start_multi_params
+           endif
         endfor
+
         if keyword_set(pub) then begin
            psoff
            wdelete, window_num
@@ -718,33 +702,32 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         else xslice_savefiles = savefile_base + '_yz_plane_binned.idlsave'
 
         window_num = 4
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
-        if keyword_set(pub) then begin
-           pson, file = xslice_plotfile, /eps
-        endif
         
-        for i=0, n_sims-1 do begin     
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
+        for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i]
+
            if keyword_set(slice_nobin) then begin
-              kpower_slice_plot, xslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
-                                 data_range = slice_data_range, pub = pub, plotfile = plotfile, $
+              kpower_slice_plot, xslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
+                                 data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, window_num = window_num, $
                                  title = array + ' YZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
                                  grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], $
-                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
               
            endif else begin
-              kpower_2d_plots, xslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
+              kpower_2d_plots, xslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
                                kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = slice_data_range, $
-                               title = array + ' YZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, plotfile = plotfile, $
+                               title = array + ' YZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
+                               plotfile = xslice_plotfile, window_num = window_num, $
                                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis
+                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis
            endelse
 
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
+           if i eq 0 then begin
+              positions = pos_use
+              undefine, start_multi_params
+           endif
         endfor
 
         if keyword_set(pub) then begin
@@ -757,31 +740,31 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         else zslice_savefiles = savefile_base + '_xy_plane_binned.idlsave'
 
         window_num = 5
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
-        if keyword_set(pub) then begin
-           pson, file = zslice_plotfile, /eps
-        endif
-        
+       
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
         for i=0, n_sims-1 do begin     
-           if keyword_set(slice_nobin) then begin
-              kpower_slice_plot, zslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
-                                 data_range = slice_data_range, pub = pub, plotfile = plotfile, $
+           if i gt 0 then pos_use = positions[*,i]
+
+          if keyword_set(slice_nobin) then begin
+              kpower_slice_plot, zslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
+                                 data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, window_num = window_num, $
                                  title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
-                                 grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis
+                                 grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis, $
+                                 delay_axis = delay_axis
               
            endif else begin
-              kpower_2d_plots,zslice_savefiles[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, $
+              kpower_2d_plots,zslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
                                kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = slice_data_range, $
-                               title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, plotfile = plotfile, $
-                               norm_2d = norm_2d, grey_scale = grey_scale, baseline_axis = baseline_axis
+                              title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
+                              plotfile = zslice_plotfile, window_num = window_num, $
+                               norm_2d = norm_2d, grey_scale = grey_scale, baseline_axis = baseline_axis, delay_axis = delay_axis
            endelse
 
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
+           if i eq 0 then begin
+              positions = pos_use
+              undefine, start_multi_params
+           endif
         endfor
 
         if keyword_set(pub) then begin
@@ -802,41 +785,45 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         vf_savefile = froot + fbase_arr + fadd_3d + '_vf_plane.idlsave'
         uv_savefile = froot + fbase_arr + fadd_3d + '_uv_plane.idlsave'
 
-        window_num = 5
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
-        if keyword_set(pub) then begin
-           pson, file = uf_plotfile, /eps
-        endif
-        
-        for i=0, n_sims-1 do uvf_slice_plot, uf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
-                                             grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
-                                             title = array + ' uf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]'
-                        
-        if keyword_set(pub) then begin
-           psoff
-           wdelete, window_num
-        endif
-
-        
         window_num = 6
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
+
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
+        for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i]
+
+          uvf_slice_plot, uf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+                          grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
+                          title = array + ' uf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
+                          plotfile = uf_plotfile, window_num = window_num
+                        
+          if i eq 0 then begin
+             positions = pos_use
+             undefine, start_multi_params
+          endif
+       endfor
+
         if keyword_set(pub) then begin
-           pson, file = vf_plotfile, /eps
+           psoff
+           wdelete, window_num
         endif
+
         
-        for i=0, n_sims-1 do uvf_slice_plot, vf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
-                                             grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
-                                             title = array + ' vf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]'
+        window_num = 7
+
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
+        for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i]
+
+           uvf_slice_plot, vf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+                           grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
+                           title = array + ' vf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
+                           plotfile = vf_plotfile, window_num = window_num
+                        
+          if i eq 0 then begin
+             positions = pos_use
+             undefine, start_multi_params
+          endif
+       endfor
         
         if keyword_set(pub) then begin
            psoff
@@ -844,22 +831,25 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         endif
 
 
-        window_num = 7
-        if windowavailable(window_num) then begin 
-           wset, window_num
-           if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-        endif else make_win = 1
-        if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
-        erase
-        if keyword_set(pub) then begin
-           pson, file = uv_plotfile, /eps
-        endif
+        window_num = 8
+
+        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
+        for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i]
+           
+           uvf_slice_plot, uv_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+                           grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
+                           title = array + ' uv plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
+                           plotfile = uv_plotfile, window_num = window_num
+                        
+           if i eq 0 then begin
+              positions = pos_use
+              undefine, start_multi_params
+           endif
+        endfor
         
-        for i=0, n_sims-1 do uvf_slice_plot, uv_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
-                                             grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
-                                             title = array + ' uv plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]'
- 
-      if keyword_set(pub) then begin
+        
+        if keyword_set(pub) then begin
            psoff
            wdelete, window_num
         endif
