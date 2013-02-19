@@ -22,7 +22,9 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
   endif
 
   ;; default to absolute value for uvf plots
-  if keyword_set(plot_uvf) and n_elements(uvf_type) eq 0 then uvf_type = 'abs'
+  if keyword_set(plot_uvf) and n_elements(uvf_type) eq 0 then begin
+     if keyword_set(full_sky) then uvf_type = 'abs' else uvf_type = 'phase'
+  endif
 
   ;; default to including baseline axis
   if n_elements(baseline_axis) eq 0 then baseline_axis = 1
@@ -389,7 +391,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
   if not keyword_set(slice_nobin) then slice_fadd = '_binned' else slice_fadd = ''
   yslice_plotfile = plotfile_base + '_xz_plane' + plot_fadd + slice_fadd + '.eps'
   xslice_plotfile = plotfile_base + '_yz_plane' + plot_fadd + slice_fadd + '.eps'
-  zslice_plotfile = plotfile_base + '_xy_plane' + plot_fadd + slice_fadd + '.eps'
+  zslice_plotfile = plotfile_base + '_xy_plane' + plot_fadd + '.eps' ;; zslice is never rebinnined
 
   if keyword_set(plot_wedge_line) then begin
      redshift = 8
@@ -450,7 +452,6 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         ;; plot input uv
         initial_uv_plotfile = froot + fbase_arr + '_initial.eps'
         
-        if n_elements(uvf_type) eq 0 then uvf_type = 'abs'
         uvf_slice_plot, initial_uv_savefile, pub = pub, plotfile = initial_uv_plotfile, window_num = 10, plot_xrange = plot_urange, $
                         plot_yrange = plot_vrange, title = array + ' full sky initial uv plane (' + uvf_type + ')', $
                         grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type
@@ -563,10 +564,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         uv_savefile = froot + fbase_arr + fadd_3d + '_uv_plane' + uvf_fadd + '.idlsave'
 
         if keyword_set(full_sky) then begin
-           if n_elements(uvf_type) eq 0 then uvf_type = 'abs'
            title_note = deg_offset_str[sim_num] + '!Uo!N'
         endif else begin
-           if n_elements(uvf_type) eq 0 then uvf_type = 'phase'
            title_note =  ' [' + deg_offset_str[sim_num] + '!Uo!N, 0!Uo!N]'
         endelse
 
@@ -589,7 +588,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
      ncol = ceil(sqrt(n_sims))
      nrow = ceil(n_sims / double(ncol))
-     start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
+     multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
 
      window_num = 1
 
@@ -602,7 +601,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            ratio = 1
         endif else file_arr_2d = savefiles_2d[i]
  
-        if i gt 0 then pos_use = positions[*,i]
+        if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
 
         kpower_2d_plots, file_arr_2d, multi_pos = pos_use, start_multi_params = start_multi_params, $
                          kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, pub = pub, $
@@ -622,6 +621,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         wdelete, window_num
      endif
 
+     xsize = !d.x_vsize
+     ysize = !d.y_vsize
      window_num = 2
      if windowavailable(window_num) then begin 
         wset, window_num
@@ -662,12 +663,11 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         window_num = 3
 
         if keyword_set(slice_nobin) then yslice_savefiles = froot + fbase_arr + fadd_3d + '_xz_plane.idlsave' $
-        else yslice_savefiles = savefile_base + '_xz_plane_binned.idlsave'
+        else yslice_savefiles = froot + fbase_arr + fadd_3d + '_xz_plane_binned.idlsave'
 
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
-
+        undefine, pos_use
         for i=0, n_sims-1 do begin
-           if i gt 0 then pos_use = positions[*,i]
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
         
            if keyword_set(slice_nobin) then begin
 
@@ -699,13 +699,13 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         
         
         if keyword_set(slice_nobin) then xslice_savefiles = froot + fbase_arr + fadd_3d + '_yz_plane.idlsave' $
-        else xslice_savefiles = savefile_base + '_yz_plane_binned.idlsave'
+        else xslice_savefiles = froot + fbase_arr + fadd_3d + '_yz_plane_binned.idlsave'
 
         window_num = 4
         
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
+        undefine, pos_use
         for i=0, n_sims-1 do begin
-           if i gt 0 then pos_use = positions[*,i]
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
 
            if keyword_set(slice_nobin) then begin
               kpower_slice_plot, xslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
@@ -736,30 +736,21 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         endif
         
 
-        if keyword_set(slice_nobin) then zslice_savefiles = froot + fbase_arr + fadd_3d + '_xy_plane.idlsave' $
-        else zslice_savefiles = savefile_base + '_xy_plane_binned.idlsave'
+        ;; zslice is never binned
+        zslice_savefiles = froot + fbase_arr + fadd_3d + '_xy_plane.idlsave'
 
         window_num = 5
        
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}
-        for i=0, n_sims-1 do begin     
-           if i gt 0 then pos_use = positions[*,i]
+        undefine, pos_use
+         for i=0, n_sims-1 do begin     
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
 
-          if keyword_set(slice_nobin) then begin
-              kpower_slice_plot, zslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
-                                 data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, window_num = window_num, $
-                                 title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
-                                 grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis, $
-                                 delay_axis = delay_axis
-              
-           endif else begin
-              kpower_2d_plots,zslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
-                               kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = slice_data_range, $
-                              title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
-                              plotfile = zslice_plotfile, window_num = window_num, $
-                               norm_2d = norm_2d, grey_scale = grey_scale, baseline_axis = baseline_axis, delay_axis = delay_axis
-           endelse
-
+           kpower_slice_plot, zslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
+                              data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, window_num = window_num, $
+                              title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
+                              grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis, $
+                              delay_axis = delay_axis
+           
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
            if i eq 0 then begin
               positions = pos_use
@@ -787,11 +778,11 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
         window_num = 6
 
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
+        undefine, pos_use
         for i=0, n_sims-1 do begin
-           if i gt 0 then pos_use = positions[*,i]
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
 
-          uvf_slice_plot, uf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+          uvf_slice_plot, uf_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                           grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                           title = array + ' uf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
                           plotfile = uf_plotfile, window_num = window_num
@@ -810,11 +801,11 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         
         window_num = 7
 
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
+        undefine, pos_use
         for i=0, n_sims-1 do begin
-           if i gt 0 then pos_use = positions[*,i]
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
 
-           uvf_slice_plot, vf_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+           uvf_slice_plot, vf_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                            grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                            title = array + ' vf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
                            plotfile = vf_plotfile, window_num = window_num
@@ -833,11 +824,11 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
         window_num = 8
 
-        start_multi_params = {ncol:ncol, nrow:nrow, ordering:'col'}       
-        for i=0, n_sims-1 do begin
-           if i gt 0 then pos_use = positions[*,i]
+        undefine, pos_use
+         for i=0, n_sims-1 do begin
+           if i gt 0 then pos_use = positions[*,i] else start_multi_params = multi_params
            
-           uvf_slice_plot, uv_savefile[i], multi_pos = positions[*,i], multi_aspect = multi_aspect, pub = pub, $
+           uvf_slice_plot, uv_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                            grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                            title = array + ' uv plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
                            plotfile = uv_plotfile, window_num = window_num

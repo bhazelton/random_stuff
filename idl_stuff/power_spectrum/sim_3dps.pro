@@ -238,6 +238,7 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
            ;; save initial uv slice   
            uv_slice = uvf_slice(reform(my_model_uv, n_kx, n_ky, 1), kx_mpc, ky_mpc, [mean(frequencies)], kperp_lambda_conv, $
                                 delay_params, hubble_param, slice_axis = 2, slice_inds = 0, slice_savefile = initial_uv_savefile)
+
            undefine, my_model_uv
 
         endelse
@@ -890,9 +891,9 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
                                        log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
                                        binned_weights = binned_weights, fill_holes = fill_holes) $
   else power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, log_kpar = log_kpar, $
-                                       log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
-                                       weights = weights_3d, binned_weights = binned_weights, fill_holes = fill_holes)
-
+                                         log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                         weights = weights_3d, binned_weights = binned_weights, fill_holes = fill_holes)
+  
   power = power_rebin
   kperp_edges = kperp_edges_mpc
   kpar_edges = kpar_edges_mpc
@@ -930,6 +931,52 @@ pro sim_3dps, simfile, psf = psf, refresh = refresh, no_kzero = no_kzero, beam_e
   zslice_power = kpower_slice(power_3d, kx_mpc, ky_mpc, kz_mpc, weights_3d, kperp_lambda_conv, delay_params, hubble_param, $
                               slice_axis = 2, slice_inds = 1, slice_weights = zslice_weights, slice_savefile = zslice_savefile)
 
+  ;; also make binned versions of x & y slices
+  yslice_binned_savefile = froot + filebase + fadd + '_xz_plane_binned.idlsave'
+  if keyword_set(no_weighting) then $
+     yslice_power_rebin = kspace_rebinning_2d(yslice_power, kx_mpc, [ky_mpc[0]], kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
+                                              log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                              binned_weights = binned_weights, fill_holes = fill_holes) $
+  else yslice_power_rebin = kspace_rebinning_2d(yslice_power, kx_mpc, [ky_mpc[0]], kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
+                                                log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, $
+                                                kpar_bin = kpar_bin, weights = yslice_weights, binned_weights = binned_weights, $
+                                                fill_holes = fill_holes)
+  
+  power = yslice_power_rebin
+  kperp_edges = kperp_edges_mpc
+  kpar_edges = kpar_edges_mpc
+  weights = binned_weights
+  
+  save, file = yslice_binned_savefile, power, weights, kperp_edges, kpar_edges, kperp_lambda_conv, delay_params, $
+        hubble_param
+  
+  if not keyword_set(quiet) then begin
+     kpower_2d_plots, yslice_binned_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
+                      data_range = data_range, pub = pub, window_num = 3, title = 'XZ plane'
+  endif
+  
+  xslice_binned_savefile = froot + filebase + fadd + '_yz_plane_binned.idlsave'
+  if keyword_set(no_weighting) then $
+    xslice_power_rebin = kspace_rebinning_2d(xslice_power, [kx_mpc[n_kx/2]], ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
+                                             log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                             binned_weights = binned_weights, fill_holes = fill_holes) $
+  else xslice_power_rebin = kspace_rebinning_2d(xslice_power, [kx_mpc[n_kx/2]], ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
+                                                log_kpar = log_kpar, log_kperp = log_kperp, kperp_bin = kperp_bin, $
+                                                kpar_bin = kpar_bin, weights = xslice_weights, binned_weights = binned_weights, $
+                                                fill_holes = fill_holes)
+  
+  power = xslice_power_rebin
+  kperp_edges = kperp_edges_mpc
+  kpar_edges = kpar_edges_mpc
+  weights = binned_weights
+  
+  save, file = xslice_binned_savefile, power, weights, kperp_edges, kpar_edges, kperp_lambda_conv, delay_params, $
+        hubble_param
+  
+  if not keyword_set(quiet) then begin
+     kpower_2d_plots, xslice_binned_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
+                      data_range = data_range, pub = pub, window_num = 4, title = 'YZ plane'
+  endif
 
   print, 'Binning to 1D power spectrum'
   if keyword_set(no_weighting) then $
