@@ -2,11 +2,11 @@
 
 pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
 
-  savefile = base_path() + 'single_use/multibaseline_data.idlsave'
+  savefile = base_path('data') + 'single_use/multibaseline_data.idlsave'
   ftest = file_test(savefile) *  (1 - file_test(savefile, /zero_length))
 
   if ftest eq 0 or keyword_set(refresh) then begin
-     froot = base_path() + 'fhd/simulations/'
+     froot = base_path('data') + 'fhd_simulations_old/'
      simfile = froot + 'sim_496t_offaxis_uvf.idlsave'
      info_file = froot + 'sim_496t_info.idlsave'
      weights_file = froot + 'sim_496t_weights.idlsave'
@@ -121,8 +121,8 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
            beam_radii, nbaselines, beam_uv_binsize, psf_resolution, n_uv_beam, n_freq, n_u, n_v, uv_binsize
   endif else restore, savefile
 
-  if keyword_set(grey_scale) then plotfile = base_path() + 'single_use/multibaseline_fig_grey.eps' $
-  else plotfile = base_path() + 'single_use/multibaseline_fig.eps'
+  if keyword_set(grey_scale) then plotfile = base_path('plots') + 'single_use/multibaseline_fig_grey.eps' $
+  else plotfile = base_path('plots') + 'single_use/multibaseline_fig.eps'
 
   u_pix = 945
   v_pix = 945
@@ -306,9 +306,9 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
   size_factor = 200
   xsize = xlen_punits * size_factor
   ysize = ylen_punits * size_factor
-  window_num = 2
+  window_num = 1
 
-  if windowavailable(2) then begin 
+  if windowavailable(window_num) then begin 
      wset, window_num
      if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
   endif else make_win = 1
