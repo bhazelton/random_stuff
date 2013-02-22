@@ -7,7 +7,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                cont_data_lims = cont_data_lims, eor_only = eor_only, test_power_shape = test_power_shape, eor_test = eor_test, $
                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, slice_nobin = slice_nobin, $
                undefined_data_range = undefined_data_range, slice_linear_axes = slice_linear_axes, use_outliers = use_outliers, $
-               baseline_axis = baseline_axis, delay_axis = delay_axis, plot_uvf = plot_uvf, plot_urange = plot_urange, $
+               baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv, plot_uvf = plot_uvf, plot_urange = plot_urange, $
                plot_vrange = plot_vrange, uvf_data_range = uvf_data_range, uvf_conv = uvf_conv, uvf_type = uvf_type, $
                clean_type = clean_type, clean_ratio = clean_ratio, delta = delta, eor_ratio = eor_ratio, log_kpar = log_kpar, $
                log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, $
@@ -408,7 +408,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_psf, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = psf_data_range, pub = pub, plotfile = psf_plotfile, title = 'PSF', window_num = 9, $
                       norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                      baseline_axis = baseline_axis, delay_axis = delay_axis
+                      baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
                      
   endif
 
@@ -419,7 +419,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_eor, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = eor_data_range, pub = pub, plotfile = eor_plotfile, title = 'EoR ' + eor_tag, $
                       window_num = 10, norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                      wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
+                      wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
   endif
 
   if n_elements(test_power_shape) ne 0 then begin
@@ -436,7 +436,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, savefile_test_power, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = test_data_range, pub = pub, plotfile = test_power_plotfile, $
                       title = test_power_shape + ' Power test', window_num = 10, norm_2d = norm_2d, grey_scale = grey_scale, $
-                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
+                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, $
+                      delay_axis = delay_axis, hinv = hinv
   endif
   
   if keyword_set(full_sky) then begin
@@ -445,7 +446,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      ;; plot input sky
      initial_image_plotfile = plotfile_path + sim_plot_folder + 'sim' + tile_tag + '_' + names[sim_num] + '_image_initial.eps'
      uvf_slice_plot, initial_uv_savefile, pub = pub, plotfile = initial_image_plotfile, window_num = 11, $
-                     title = array + ' initial image', grey_scale = grey_scale, /mark_0, /image_space
+                     title = array + ' initial image', grey_scale = grey_scale, /mark_0, /image_space, hinv = hinv
 
      
      if keyword_set(plot_uvf) then begin
@@ -454,7 +455,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
         
         uvf_slice_plot, initial_uv_savefile, pub = pub, plotfile = initial_uv_plotfile, window_num = 10, plot_xrange = plot_urange, $
                         plot_yrange = plot_vrange, title = array + ' full sky initial uv plane (' + uvf_type + ')', $
-                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type
+                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type, hinv = hinv
      endif
   endif
 
@@ -465,7 +466,8 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
      kpower_2d_plots, savefiles_2d[0], /plot_weights, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       pub = pub, plotfile = weight_plotfile, window_num = 11, norm_2d = norm_2d, grey_scale = grey_scale, $
-                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, delay_axis = delay_axis
+                      plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, baseline_axis = baseline_axis, $
+                      delay_axis = delay_axis, hinv = hinv
   endif
 
   if n_sims eq 1 then begin
@@ -483,7 +485,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
      kpower_2d_plots, file_arr_2d, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                       data_range = data_range, pub = pub, plotfile = plotfile_2d, title = array + ' ' + title_note, $
                       norm_2d = norm_2d, grey_scale = grey_scale,  plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                      baseline_axis = baseline_axis, delay_axis = delay_axis, ratio = ratio
+                      baseline_axis = baseline_axis, delay_axis = delay_axis, ratio = ratio, hinv = hinv
      
      file_arr = [savefiles_1d, eor_file_1d_input, eor_file_1d]
      names_arr = ['Simulation PS', 'input EoR', 'general EoR']
@@ -520,12 +522,12 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            kpower_slice_plot, yslice_savefile, data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, $
                               window_num = 3, title = array + ' XZ plane ' + title_note, $
                               grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
+                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
            
            kpower_slice_plot, xslice_savefile, data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, $
                               window_num = 4, title = array + ' YZ plane ' + title_note, $
                               grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
+                              linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
         endif else begin
            yslice_savefile = froot + fbase_arr + fadd_3d + '_xz_plane_binned.idlsave'
 
@@ -533,21 +535,21 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                             data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, window_num = 3, $
                             title = array + ' XZ plane ' + title_note, norm_2d = norm_2d, $
                             grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp, $
-                            baseline_axis = baseline_axis, delay_axis = delay_axis
+                            baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
            
            xslice_savefile = froot + fbase_arr + fadd_3d + '_yz_plane_binned.idlsave'
            
            kpower_2d_plots, xslice_savefile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, $
                             data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, window_num = 4, $
                             title = array + ' YZ plane ' + title_note, norm_2d = norm_2d, $
-                            grey_scale = grey_scale, baseline_axis = baseline_axis, delay_axis = delay_axis
+                            grey_scale = grey_scale, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
         endelse
 
         zslice_savefile = froot + fbase_arr + fadd_3d + '_xy_plane.idlsave'
 
         kpower_slice_plot, zslice_savefile, data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, $
                            window_num = 5, title = array + ' XY plane ' + title_note, grey_scale = grey_scale, $
-                           linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
+                           linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
      endif
 
      if keyword_set(plot_uvf) then begin
@@ -572,15 +574,16 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
 
         uvf_slice_plot, uf_savefile, pub = pub, plotfile = uf_plotfile, window_num = 6, plot_xrange = plot_urange, $
                         data_range = uvf_data_range, title = array + ' uf plane (' + uvf_type + ') ' + title_note, $
-                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type
+                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type, hinv = hinv
         
         uvf_slice_plot, vf_savefile, pub = pub, plotfile = vf_plotfile, window_num = 7, plot_xrange = plot_vrange, $
                         data_range = uvf_data_range, title = array + ' vf plane (' + uvf_type + ') ' + title_note, $
-                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type
+                        grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type, hinv = hinv
         
         uvf_slice_plot, uv_savefile, pub = pub, plotfile = uv_plotfile, window_num = 8, plot_xrange = plot_urange, $
                         plot_yrange = plot_vrange, title = array + ' uv plane (' + uvf_type + ') ' + title_note, $
-                        data_range = uvf_data_range, grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, type = uvf_type
+                        data_range = uvf_data_range, grey_scale = grey_scale, baseline_axis = baseline_axis, /mark_0, $
+                        type = uvf_type, hinv = hinv
 
      endif
 
@@ -607,7 +610,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                          kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, pub = pub, $
                          title = array + ' [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', norm_2d = norm_2d, grey_scale = grey_scale, $
                          plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, $
-                         delay_axis = delay_axis, ratio = ratio, plotfile = plotfile_2d, window_num = window_num
+                         delay_axis = delay_axis, ratio = ratio, plotfile = plotfile_2d, window_num = window_num, hinv = hinv
         if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
 
         if i eq 0 then begin
@@ -675,14 +678,14 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                                  data_range = slice_data_range, pub = pub, plotfile = yslice_plotfile, window_num = window_num, $
                                  title = array + ' XZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
                                  grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], $
-                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
+                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
            endif else begin
               kpower_2d_plots, yslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
                                kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = slice_data_range, $
                                title = array + ' XZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
                                plotfile = yslice_plotfile, window_num = window_num, $
                                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis
+                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
            endelse
 
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
@@ -712,7 +715,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                                  data_range = slice_data_range, pub = pub, plotfile = xslice_plotfile, window_num = window_num, $
                                  title = array + ' YZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
                                  grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, wedge_amp = wedge_amp[i], $
-                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis
+                                 linear_axes = slice_linear_axes, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
               
            endif else begin
               kpower_2d_plots, xslice_savefiles[i], multi_pos = pos_use, start_multi_params = start_multi_params, $
@@ -720,7 +723,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                                title = array + ' YZ plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', pub = pub, $
                                plotfile = xslice_plotfile, window_num = window_num, $
                                norm_2d = norm_2d, grey_scale = grey_scale, plot_wedge_line = plot_wedge_line, $
-                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis
+                               wedge_amp = wedge_amp[i], baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv
            endelse
 
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
@@ -749,7 +752,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
                               data_range = slice_data_range, pub = pub, plotfile = zslice_plotfile, window_num = window_num, $
                               title = array + ' XY plane [' + deg_offset_str[i] + '!Uo!N, 0!Uo!N]', $
                               grey_scale = grey_scale, linear_axes = slice_linear_axes, baseline_axis = baseline_axis, $
-                              delay_axis = delay_axis
+                              delay_axis = delay_axis, hinv = hinv
            
            if keyword_set(undefined_data_range) then temp = n_elements(temporary(data_range))
            if i eq 0 then begin
@@ -785,7 +788,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
           uvf_slice_plot, uf_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                           grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                           title = array + ' uf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
-                          plotfile = uf_plotfile, window_num = window_num
+                          plotfile = uf_plotfile, window_num = window_num, hinv = hinv
                         
           if i eq 0 then begin
              positions = pos_use
@@ -808,7 +811,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            uvf_slice_plot, vf_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                            grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                            title = array + ' vf plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
-                           plotfile = vf_plotfile, window_num = window_num
+                           plotfile = vf_plotfile, window_num = window_num, hinv = hinv
                         
           if i eq 0 then begin
              positions = pos_use
@@ -831,7 +834,7 @@ pro sim_plots, sim_num = sim_num, no_kzero = no_kzero, pub = pub, refresh_ps = r
            uvf_slice_plot, uv_savefile[i], multi_pos = pos_use, start_multi_params = start_multi_params, pub = pub, $
                            grey_scale = grey_scale, baseline_axis = baseline_axis, data_range = uvf_data_range, $
                            title = array + ' uv plane phase [' + deg_offset_str[sim_num[i]] + '!Uo!N, 0!Uo!N]', $
-                           plotfile = uv_plotfile, window_num = window_num
+                           plotfile = uv_plotfile, window_num = window_num, hinv = hinv
                         
            if i eq 0 then begin
               positions = pos_use
