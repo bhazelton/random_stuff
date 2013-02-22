@@ -541,4 +541,31 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
 
   tvlct, r, g, b
 
+
+
+  froot = base_path('data') + 'fhd_simulations_old/'
+  simfile = froot + 'sim_496t_fullsky_uvf_holo_2dkpower.idlsave'
+
+  if keyword_set(grey_scale) then plotfile = base_path('plots') + 'single_use/multibaseline_ps_grey.eps' $
+  else plotfile = base_path('plots') + 'single_use/multibaseline_ps.eps'
+
+  info_file = froot + 'sim_496t_info.idlsave'
+  restore, info_file   
+  xy_length = 2048
+  deg_offset = xy_length * degpix / sqrt(2d)
+  rad_offset = deg_offset * !pi/180d
+
+  redshift = 8
+  cosmology_measures, redshift, wedge_factor = wedge_factor
+  source_dists = rad_offset
+  wedge_amp = wedge_factor * source_dists
+
+  kperp_plot_range = [6e-3, 0.2]
+  data_range = [1e13, 1e18]
+
+  kpower_2d_plots, simfile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, $
+                   /no_title, pub = pub, grey_scale = grey_scale, /baseline_axis, /plot_wedge_line, wedge_amp = wedge_amp, $
+                   plotfile = plotfile, window_num = 2
+
+
 end
