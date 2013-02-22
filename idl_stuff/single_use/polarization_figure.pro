@@ -138,6 +138,36 @@ pro polarization_figure, pub = pub, grey_scale = grey_scale, hinv = hinv
      psoff
      wdelete, window_num
   endif
+  undefine, positions
+
+
+  plotfile = base_path('plots') + 'single_use/polarization_ps_figure.eps'
+  window_num=3
+
+  fullsky_filebase = 'sim_496t_fullsky_uvf'
+  truesky_ps_file = froot + fullsky_filebase + '_truesky_2dkpower.idlsave'
+  holo_ps_file = froot + fullsky_filebase + '_holo_2dkpower.idlsave'
+
+
+  start_multi_params = {ncol:2, nrow:2, ordering:'row'}
+  kperp_plot_range = [.003, .3]
+  data_range = [5e12, 1e18]
+  
+  kpower_2d_plots, holo_ps_file, multi_pos = positions, start_multi_params = start_multi_params, $
+                  title = 'Gridded', /baseline_axis, /delay_axis, grey_scale = grey_scale, plotfile = plotfile, $
+                  window_num = window_num, pub = pub, hinv = hinv, kperp_plot_range = kperp_plot_range, data_range = data_range
+
+  kpower_2d_plots, truesky_ps_file, multi_pos = positions[*,1], $
+                  title = 'Beam corrected', /baseline_axis, /delay_axis, grey_scale = grey_scale, plotfile = plotfile, $
+                  window_num = window_num, pub = pub, hinv = hinv, kperp_plot_range = kperp_plot_range, data_range = data_range
+
+  kpower_2d_plots, [truesky_ps_file, holo_ps_file], multi_pos = positions[*,3], $
+                  title = 'Beam corrected / Gridded', /baseline_axis, /delay_axis, grey_scale = grey_scale, plotfile = plotfile, $
+                  window_num = window_num, pub = pub, hinv = hinv, kperp_plot_range = kperp_plot_range, /ratio
+  if keyword_set(pub) then begin
+     psoff
+     wdelete, window_num
+  endif
 
 
 end
