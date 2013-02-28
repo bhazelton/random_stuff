@@ -5,7 +5,8 @@ pro healpix_wrapper, pub = pub
   
   ;;datafile = '/data2/MWA/PowerSpectra/FHD_healpix_test/multi_freq_residuals_cube_healpix.sav'
 
-  fhd_data_plots, datafile, /healpix, dft_fchunk=2, plot_path = plot_path, pub=pub
+  fhd_data_plots, datafile, dft_fchunk=2, plot_path = plot_path, pub=pub
+
 
   ;;, /log_kperp, /log_kpar
   ;;, pol_inc='xx', type_inc='dirty'
