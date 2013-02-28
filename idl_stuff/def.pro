@@ -10,7 +10,7 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','
                          ;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
                          ;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
 
-ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wappers', 'textoidl']
+ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
 ian_path = '/Users/bryna/Documents/Physics/FHD/'
 ian_path_dirs = ian_path + ['', 'fhd\ utils', 'fhd_output', 'fhd_core']
