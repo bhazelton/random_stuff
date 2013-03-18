@@ -2,11 +2,12 @@ pro healpix_wrapper, pub = pub
 
   ;; The only required input is the datafile name (including the full path)
  
-  ;;datafile = '/data2/MWA/PowerSpectra/FHD_healpix_test/multi_freq_residuals_cube_healpix.sav'
-  
-  datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
-    
-  ;; dft_fchunk applies only to Healpix datasets (it's ignored otherwise) and it specifies how many frequencies to process
+  ;; datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
+  datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_' + $
+             ['even','odd']+ '_cube.sav' 
+ 
+
+ ;; dft_fchunk applies only to Healpix datasets (it's ignored otherwise) and it specifies how many frequencies to process
   ;;   through the dft at once. This keyword allows for trade-offs between memory use and speed.
   ;; The optimum setting varies by computer and the speed is NOT a linear function of this parameter 
   ;;   (it's not even monotonic) so some experimenting is required. The memory required is approximately linear -- 
@@ -22,11 +23,12 @@ pro healpix_wrapper, pub = pub
   ;; This is also where the code looks for intermediate save files to avoid re-running code.
   ;; If this is parameter is not set, the files will be saved in the same directory as the datafile.
   
-  ;; save_path = '/data2/MWA/FHD/DATA/X16/EOR1/fhd_v5/Healpix/ps/'
- 
   ;; the following sets the save_path to a 'ps' directory inside the datafile directory and creates the directory if it doesn't exist
   ;; save_path = file_dirname(datafile, /mark_directory) + 'ps' + path_sep()
   ;; if not file_test(save_path, /directory) then file_mkdir, save_path
+
+
+  ;; savefilebase specifies a base name to use for the save files
 
 
   ;; plot_path specifies a location to save plot files.
@@ -51,7 +53,7 @@ pro healpix_wrapper, pub = pub
   ;; To set any of these flags, set them equal to 1 (true)
 
   ;; refresh_dft=1
-
+  ;;refresh_ps = 1
 
   ;; options for binning:
   ;; log_kperp, log_kpar and log_k1d are flags: set to 1 (true) for logarithmic bins
@@ -76,8 +78,9 @@ pro healpix_wrapper, pub = pub
   ;; kperp_linear_axis = 1
   ;; kpar_linear_axis = 1
  
-  fhd_data_plots, datafile, dft_fchunk=dft_fchunk, plot_path = plot_path, save_path = save_path, pol_inc = pol_inc, $
-                  type_inc = type_inc, refresh_dft = refresh_dft, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
+  fhd_data_plots, datafile, dft_fchunk=dft_fchunk, plot_path = plot_path, save_path = save_path, savefilebase = savefilebase, $
+                  pol_inc = pol_inc, type_inc = type_inc, $
+                  refresh_dft = refresh_dft, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
                   log_kpar = log_kpar, log_kperp = log_kperp, kpar_bin = kpar_bin, kperp_bin = kperp_bin, log_k1d = log_k1d, $
                   k1d_bin = k1d_bin, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, $
                   data_range = data_range, baseline_axis = baseline_axis, delay_axis = delay_axis, $
