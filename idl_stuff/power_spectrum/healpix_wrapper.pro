@@ -2,7 +2,7 @@ pro healpix_wrapper, pub = pub
 
   ;; The only required input is the datafile name (including the full path)
  
-  ;; datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
+   ;;datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
   datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_' + $
              ['even','odd']+ '_cube.sav' 
  
@@ -38,12 +38,12 @@ pro healpix_wrapper, pub = pub
 
   ;; pol_inc specifies which polarizations to generate the power spectra for.
   ;; The default is ['xx,'yy']
-
+  pol_inc = ['xx']
 
   ;; type_inc specifies which types of cubes to generate the power spectra for. 
   ;; The default is ['dirty', 'model', 'res']. 
   ;; The number of power spectra generated is the number of polarizations * the number of types.
-
+  type_inc = ['res']
 
   ;; There are 3 refresh flags to indicate that various stages should be re-calculated 
   ;;   (rather than using previous save files if they exist).
@@ -52,7 +52,7 @@ pro healpix_wrapper, pub = pub
   ;; The next stage is refresh_ps and the last stage is refresh_binning.
   ;; To set any of these flags, set them equal to 1 (true)
 
-  ;; refresh_dft=1
+  refresh_dft=1
   ;;refresh_ps = 1
 
   ;; options for binning:
