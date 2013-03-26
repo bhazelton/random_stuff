@@ -1,4 +1,4 @@
-pro test_hpx_weights, pol, log=log
+pro test_hpx_weights, pol, log=log, variance=variance
 
   datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_even_cube.sav' 
   ;;datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_odd_cube.sav' 
@@ -9,7 +9,8 @@ pro test_hpx_weights, pol, log=log
   if count_pol eq 0 then message, 'pol not recognized'
 
   pixel_nums = getvar_savefile(datafile, 'hpx_inds')
-  hpx_weight = getvar_savefile(datafile, 'weights_' + pol + '_cube')
+  if keyword_set(variance) then hpx_weight = getvar_savefile(datafile, 'variance_' + pol + '_cube') $
+  else hpx_weight = getvar_savefile(datafile, 'weights_' + pol + '_cube')
   nside = getvar_savefile(datafile, 'nside')
   
   ;; Angular resolution is given in Healpix paper in units of arcminutes, need to convert to radians
