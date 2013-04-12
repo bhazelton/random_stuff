@@ -118,8 +118,213 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
      model_uv = model_uv * norm_gridding
 
      save, file = savefile, sim_cube, weights_cube, model_uv, uv_arr, baseline_u, baseline_v, frequencies, beam_uv, beam_shape, $
-           beam_radii, nbaselines, beam_uv_binsize, psf_resolution, n_uv_beam, n_freq, n_u, n_v, uv_binsize
+           beam_radii, nbaselines, beam_uv_binsize, beam_uv_arr, psf_resolution, n_uv_beam, n_freq, n_u, n_v, uv_binsize
   endif else restore, savefile
+
+
+  ;; Beam figure
+  if keyword_set(grey_scale) then plotfile = base_path('plots') + 'single_use/multibaseline_beam_grey.eps' $
+  else plotfile = base_path('plots') + 'single_use/multibaseline_beam.eps'
+
+  ;;fractions = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, .1, .2, .5]
+  ;;fractions = [0.002, 0.1*(indgen(9)+1)]
+
+  beam_freq_ind = 16
+
+  ;; set up beam uv plot
+  fractions = [0.0002, 0.002, 0.02, .2, .5]
+  levels = max(beam_uv[*,*,0])*fractions
+  colors = strarr(n_elements(levels)) + 'dark grey'
+  colors[where(fractions eq 0.002)] = 'black'
+  annotations = number_formatter(fractions*100) + ' %'
+  linestyles = intarr(n_elements(levels))+2
+  linestyles[where(fractions eq 0.002)] = 0
+  linestyles[where(fractions eq 0.5)] = 1
+
+  range = [-1,1]*round(beam_radii[beam_freq_ind])
+  ind_range = where(beam_uv_arr gt range[0] and beam_uv_arr lt range[1], count_inds)
+  if count_inds lt 1 then stop
+  
+  beam_use = beam_uv[ind_range,ind_range,beam_freq_ind]
+  uv_arr_use = beam_uv_arr[ind_range]
+
+  beam_norm = beam_use/max(beam_use) * 255
+
+  ;; now work on beam theta plot
+  beam_theta = abs(fft_shift(fft(beam_uv[*,*,beam_freq_ind])) * n_uv_beam^2. * beam_uv_binsize^2.)
+  beam_degpix = (1/(n_uv_beam * beam_uv_binsize))*180/!pi
+  beam_deg_arr = (dindgen(n_uv_beam) - n_uv_beam/2d) * beam_degpix
+
+  deg_range = [-1,1] * 90
+  deg_ind_range = where(beam_deg_arr gt deg_range[0] and beam_deg_arr lt deg_range[1], count_deg_inds)
+  if count_deg_inds lt 1 then stop
+
+  beam_deg_use = beam_theta[deg_ind_range, deg_ind_range, 0]
+  deg_arr_use = beam_deg_arr[deg_ind_range]
+
+  beam_deg_norm = beam_deg_use/max(beam_deg_use)*255
+
+  cb_size = 0.025
+  margin = [0.12, 0.14, 0.02, 0.04]
+  cb_margin = [0.14, 0.02] 
+  plot_pos = [margin[0], margin[1], (1-cb_margin[1]-cb_size-cb_margin[0]-margin[2]), (1-margin[3])]
+  cb_pos = [(1-cb_margin[1]-cb_size), margin[1], (1-cb_margin[1]), (1-margin[3])]
+  
+  plot_len = [plot_pos[2]-plot_pos[0], plot_pos[3] - plot_pos[1]]
+  plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
+
+  data_aspect=1
+  aspect_ratio =  data_aspect /plot_aspect
+  if aspect_ratio gt 1 then begin
+     y_factor = aspect_ratio
+     x_factor = 1.
+  endif else begin   
+     y_factor = 1.
+     x_factor = 1./aspect_ratio
+  endelse
+  
+  ncol = 1
+  nrow = 2
+  col_val = [0,0]
+  row_val = [0,1]
+
+  ;; taken from kpower_2d_plots
+  multi_pos = fltarr(4,2)
+  multi_pos[0,*] = col_val/double(ncol)
+  multi_pos[1,*] = row_val/double(nrow)
+  multi_pos[2,*] = (col_val+1)/double(ncol)
+  multi_pos[3,*] = (row_val+1)/double(nrow)
+
+  max_ysize = 1000
+  max_xsize = 1200
+  base_size = 600
+
+  ;; define window size based on aspect ratio
+  base_size_use = base_size
+  xsize = round(base_size * x_factor * ncol)
+  ysize = round(base_size * y_factor * nrow)
+  while (ysize gt max_ysize) or (xsize gt max_xsize) do begin
+     base_size_use = base_size_use - 100
+     xsize = round(base_size_use * x_factor * ncol)
+     ysize = round(base_size_use * y_factor * nrow)
+  endwhile
+
+  new_pos = fltarr(4,2)
+  new_cb_pos = fltarr(4,2)
+  for i=0, 1 do begin
+     multi_xlen = (multi_pos[2,i]-multi_pos[0,i])
+     multi_ylen = (multi_pos[3,i]-multi_pos[1,i])
+     multi_center = [multi_pos[0,i] + multi_xlen/2d, multi_pos[1,i] + multi_ylen/2d]
+
+     multi_size = [xsize*multi_xlen, ysize*multi_ylen]
+     multi_aspect = multi_size[1]/float(multi_size[0])
+     new_aspect = aspect_ratio/multi_aspect
+     if new_aspect gt 1 then begin
+        y_factor = 1.
+        x_factor = 1/new_aspect
+     endif else begin          
+        y_factor = new_aspect
+        x_factor = 1.
+     endelse
+ 
+     new_xlen = multi_xlen*x_factor
+     new_ylen = multi_ylen*y_factor
+     new_multi = [multi_center[0] - new_xlen/2d, multi_center[1] - new_ylen*y_factor/2d, $
+                  multi_center[0] + new_xlen/2d, multi_center[1] + new_ylen*y_factor/2d]
+  
+     new_pos[*,i] = [new_xlen * plot_pos[0] + new_multi[0], new_ylen * plot_pos[1] + new_multi[1], $
+                new_xlen * plot_pos[2] + new_multi[0], new_ylen * plot_pos[3] + new_multi[1]]
+     
+     new_cb_pos[*,i] = [new_xlen * cb_pos[0] + new_multi[0], new_ylen * cb_pos[1] + new_multi[1], $
+                   new_xlen * cb_pos[2] + new_multi[0], new_ylen * cb_pos[3] + new_multi[1]]
+  endfor
+  plot_pos = new_pos
+  cb_pos = new_cb_pos
+
+  window_num = 1
+  if windowavailable(window_num) then begin 
+     wset, window_num
+     if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+  endif else make_win = 1
+  if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+
+  if keyword_set(pub) then begin
+     charthick = 3
+     thick = 3
+     xthick = 3
+     ythick = 3
+     font = 1
+     charsize = 2
+
+     pson, file = plotfile, /eps 
+  endif else begin
+     charthick = 1
+     thick = 1
+     xthick = 1
+     ythick = 1
+     font = -1
+     charsize = 1
+
+  endelse
+
+  if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 13, /brewer
+  axkeywords = {xstyle: 1, ystyle: 1, thick: thick, charthick: charthick,  $
+                charsize: charsize, font: font, xthick: xthick, ythick: ythick} 
+
+  cgimage, beam_norm, position = plot_pos[*,1], xrange = range, yrange = range, /nointerp, $
+           axkeywords = axkeywords, /axes, xtitle = textoidl('u (\lambda)', font = font), $
+           ytitle = textoidl('v (\lambda)', font = font)
+
+  cgcontour, beam_use, uv_arr_use, uv_arr_use, /onimage, levels=levels, c_linestyle=linestyles, $
+             c_colors=colors, c_annotation=annotations, charsize = charsize, font = font
+             
+  cgcolorbar, position = cb_pos[*,1], /vertical, annotatecolor = 'black', minrange=0, maxrange = 1, $
+              title = 'Baseline Power Response', charsize = charsize, charthick = charthick, xthick = xthick, $
+              ythick = ythick, font = font
+
+
+  ;;cgimage, beam_deg_norm, /noerase, position = plot_pos[*,0], xrange = deg_range, yrange = deg_range, $
+  ;;         axkeywords = axkeywords, /axes, xtitle = textoidl('\theta_x (degrees)', font = font), $
+  ;;         ytitle = textoidl('\theta_x (degrees)', font = font), title = number_formatter(frequencies[0]) + ' MHz'
+
+  ;;cgcontour, beam_deg_use, deg_arr_use, deg_arr_use, /onimage, levels=levels, $
+  ;;           c_colors='dark_grey', c_annotation=annotations, charsize = charsize, font = font
+
+  ;;cgcolorbar, position = cb_pos[*,0], /vertical, annotatecolor = 'black', minrange=0, maxrange = 1, $
+  ;;            title = 'Baseline Power Response', charsize = charsize, charthick = charthick, xthick = xthick, $
+  ;;            ythick = ythick, font = font
+
+  nlevels = 7
+  deg_fractions = 10^(findgen(nlevels)*3/(nlevels-1)-3)
+
+  deg_levels = max(beam_deg_use)*deg_fractions
+
+  nlevels = n_elements(deg_levels)
+  deg_annotations = strarr(n_elements(nlevels)) + ' '
+  ticknames = strarr(nlevels)+ ' '
+  wh_decade = where(round(((alog10(deg_fractions) mod 1)*10))/10. eq 0, count_decade)
+  if count_decade eq 0 then stop
+  ticknames[wh_decade] = number_formatter(deg_fractions[wh_decade], format = '(e0)',/print_exp)
+
+  cgloadct, 0, /reverse, ncolors=nlevels, bottom=1
+
+  cgcontour, beam_deg_use, deg_arr_use, deg_arr_use, levels=deg_levels, /noerase, /fill, position = plot_pos[*,0], $
+             xrange = deg_range, yrange = deg_range, xtitle = textoidl('\theta_x (degrees)', font = font), $
+             ytitle = textoidl('\theta_x (degrees)', font = font), $
+             c_colors = indgen(nlevels)+1, c_annotation=deg_annotations, xstyle=1, ystyle=1, thick=thick, charthick=charthick,  $
+             charsize=charsize, font=font, xthick = xthick, ythick = ythick
+
+  cgcolorbar, position = cb_pos[*,0], /vertical, annotatecolor = 'black', range=minmax(deg_fractions), divisions= nlevels-1, $
+              ncolors = nlevels-1, bottom=2, /discrete, /ylog, ticknames = ticknames, title = 'Baseline Power Response', $
+              charsize = charsize, charthick = charthick, xthick = xthick, ythick = ythick, font = font
+
+  if keyword_set(pub) then begin
+     psoff
+     wdelete, window_num
+  endif
+
+
+  ;; Main figure
 
   if keyword_set(grey_scale) then plotfile = base_path('plots') + 'single_use/multibaseline_fig_grey.eps' $
   else plotfile = base_path('plots') + 'single_use/multibaseline_fig.eps'
@@ -306,7 +511,7 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
   size_factor = 200
   xsize = xlen_punits * size_factor
   ysize = ylen_punits * size_factor
-  window_num = 1
+  window_num = 2
 
   if windowavailable(window_num) then begin 
      wset, window_num
@@ -315,7 +520,7 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
   if make_win then cgdisplay, wid=window_num, xsize = xsize, ysize = ysize, color='white'
   cgerase, 'white'
 
-  if keyword_set(pub) then begin
+   if keyword_set(pub) then begin
      charthick = 2
      thick = 2
      xthick = 2
@@ -325,10 +530,15 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
 
      pson, file = plotfile, /eps 
   endif else begin
+     charthick = 1
+     thick = 1
+     xthick = 1
+     ythick = 1
+     font = -1
      charsize = 0.8
 
   endelse
- 
+
   if keyword_set(grey_scale) then begin
      residual_plot_color = 'dark grey'
      uv_mark_color = 'black'
@@ -565,7 +775,7 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
 
   kpower_2d_plots, simfile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, $
                    /no_title, pub = pub, grey_scale = grey_scale, /baseline_axis, /plot_wedge_line, wedge_amp = wedge_amp, $
-                   plotfile = plotfile, window_num = 2
+                   plotfile = plotfile, window_num = 3
 
 
 end
