@@ -3,8 +3,9 @@
 ;    gamma: power law index for color table
 
 
-pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, refresh_2d = refresh_2d, refresh_3dbin = refresh_3dbin, $
-                     pub = pub, fill_holes = fill_holes, quiet = quiet, plot_uvf = plot_uvf
+pro healpix_to_3dps, info_file, refresh_2d = refresh_2d, refresh_3dbin = refresh_3dbin, no_kzero = no_kzero, log_kpar = log_kpar, $
+                     log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, log_k1d = log_k1d, k1d_bin = k1d_bin, $
+                     data_range = data_range, pub = pub, fill_holes = fill_holes, quiet = quiet, plot_uvf = plot_uvf
 
   if keyword_set(refresh_2d) then refresh_3dbin = 1
 
@@ -33,6 +34,7 @@ pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, re
   test_file = file_test(info.metadata_file) *  (1 - file_test(info.metadata_file, /zero_length))  
   if test_file eq 0 then begin
      print, 'Metadata file does not exist. Running healpix_get_ft_frame now'
+stop
      healpix_get_ft_frame, info_file 
   endif
   restore, info.metadata_file
@@ -310,30 +312,18 @@ pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, re
   savefile_base = strsplit(info_file, '_info.txt', /regex, /extract)
   fadd = ''
   if keyword_set(no_kzero) then fadd = fadd + '_nok0'
-  fadd_1d = fadd
-  if keyword_set(fill_holes) then fadd = fadd + '_nohole'
-  
 
-  savefile = savefile_base + fadd + '_2dkpower.idlsave'
-  savefile_lin = savefile_base + fadd + '_linkpar_2dkpower.idlsave'
-
-  bins_per_decade = 10
-  power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, $
-                                    binned_weights = weights_2d, bins = bins_per_decade, fill_holes = fill_holes)
-
-  print, 'power_2d*weights integral:', total(weights_2d*power_rebin)
-
-  power = power_rebin
-  weights = weights_2d
-  kperp_edges = kperp_edges_mpc
-  kpar_edges = kpar_edges_mpc
-  save, file = savefile, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
-  power = 0
+  fadd_2d = ''
+  if keyword_set(fill_holes) then fadd_2d = fadd_2d + '_nohole'
+  if keyword_set(log_kpar) then fadd_2d = fadd_2d + '_logkpar'
+  if keyword_set(log_kperp) then fadd_2d = fadd_2d + '_logkperp'
 
 
-  ;; also bin with linear k_par
-  power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, /linear_kpar, $
-                                    binned_weights = weights_2d, bins = bins_per_decade, fill_holes = fill_holes)
+  savefile = savefile_base + fadd + fadd_2d + '_2dkpower.idlsave'
+ 
+  power_rebin = kspace_rebinning_2d(power_3D, kx_mpc, ky_mpc, kz_mpc, kperp_edges_mpc, kpar_edges_mpc, log_kpar = log_kpar, $
+                                    log_kperp = log_kperp, kperp_bin = kperp_bin, kpar_bin = kpar_bin, $
+                                    binned_weights = weights_2d, fill_holes = fill_holes)
 
   print, 'power_2d*weights integral:', total(weights_2d*power_rebin)
 
@@ -341,9 +331,11 @@ pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, re
   weights = weights_2d
   kperp_edges = kperp_edges_mpc
   kpar_edges = kpar_edges_mpc
-  save, file = savefile_lin, power, weights, kperp_edges, kpar_edges, bins_per_decade, kperp_lambda_conv
+  save, file = savefile, power, weights, kperp_edges, kpar_edges, kperp_bin, kpar_bin, kperp_lambda_conv
   power = 0
 
+
+ 
   plotfile_base = plotfile_path + info.id
   if keyword_set(no_kzero) then plotfile_base = plotfile_base + '_nok0'
   plotfile = plotfile_base + '_kspace_power'
@@ -360,13 +352,17 @@ pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, re
   print, 'Binning to 1D power spectrum'
   plotfile = plotfile_base + '_1d_power'
 
-  bins_per_decade = 10d
-  power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, bins = bins_per_decade, $
+  fadd_1d = ''
+  if keyword_set(log_k) then fadd_1d = fadd_1d + '_logk'
+  savefile = savefile_base + fadd + fadd_1d + '_1dkpower.idlsave'
+
+  power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, k_bin = k1d_bin, log_k = log_k1d, $
                                  binned_weights = weights_1d)
              
   print, 'power_1d*weights integral:', total(weights_1d*power_1d)
   
-  k_mid = 10^(alog10(k_edges_mpc[1:*]) - (1d/bins_per_decade)/2.)
+  if keyword_set(log_k1d) then k_mid = 10^(alog10(k_edges_mpc[1:*]) - (k1d_bin)/2.) $
+  else k_mid = k_edges_mpc[1:*] + k1d_bin/2.
   print, 'k^2d*power_1d*dk integral * 4pi *delta_k^3:', $
          total(power_1d * k_mid^2d * (k_edges_mpc - shift(k_edges_mpc, 1))[1:*])*voxel_vol_k*4d*!dpi
 
@@ -375,7 +371,7 @@ pro healpix_to_3dps, info_file, no_kzero = no_kzero, data_range = data_range, re
   k_edges = k_edges_mpc
 
   savefile = savefile_base + fadd_1d + '_1dkpower.idlsave'
-  save, file = savefile, power, weights, k_edges, bins_per_decade
+  save, file = savefile, power, weights, k_edges, k_bin
 
   if not keyword_set(quiet) then kpower_1d_plots, savefile, window_num=2
  
