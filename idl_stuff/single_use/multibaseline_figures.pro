@@ -134,8 +134,9 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
   ;; set up beam uv plot
   fractions = [0.0002, 0.002, 0.02, .2, .5]
   levels = max(beam_uv[*,*,0])*fractions
-  colors = strarr(n_elements(levels)) + 'dark grey'
+  colors = strarr(n_elements(levels)) + 'darkgrey'
   colors[where(fractions eq 0.002)] = 'black'
+  if keyword_set(grey_scale) then colors[n_elements(levels)-1] = 'grey'
   annotations = number_formatter(fractions*100) + ' %'
   linestyles = intarr(n_elements(levels))+2
   linestyles[where(fractions eq 0.002)] = 0
@@ -411,14 +412,17 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
   map_uv_pix = [u_pix-u_inds_range[0], v_pix-v_inds_range[0]]*psf_resolution
   map_uv_arr =[[[indgen(map_size[0]) * uv_binsize / psf_resolution + xrange[0]]], $
                [[indgen(map_size[1]) * uv_binsize / psf_resolution] + yrange[0]]]
+
   window, 3
+  cgloadct, 13, /brewer
+  val_add = dblarr(nb_contrib, n_freq) 
   for j=0, n_freq-1 do begin
      for i=0, nb_contrib-1 do begin
         if mask[i,j] eq 0 then continue
         pix_center = round((bcontrib_locs[i,j,*] - uv_loc) / beam_uv_binsize) + map_uv_pix
         pix_u_range = pix_center[0]-n_uv_beam/2 + [0, n_uv_beam-1]
         pix_v_range = pix_center[1]-n_uv_beam/2 + [0, n_uv_beam-1]
-        beam_pix_uvloc = [map_uv_pix[0]-pix_u_range[0], map_uv_pix[1]-pix_v_range[0]]
+        beam_pix_uvloc = pix_center - map_uv_pix + n_uv_beam/2
 
         beam_u_range = [0, n_uv_beam-1]
         beam_v_range = [0, n_uv_beam-1]
@@ -440,11 +444,17 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
         endif
 
         beam_to_add = beam_uv[beam_u_range[0]:beam_u_range[1],beam_v_range[0]:beam_v_range[1],j]
-        weight_at_uvpix = beam_to_add[beam_pix_uvloc[0], beam_pix_uvloc[1]]
+        weight_at_uvpix = beam_uv[beam_pix_uvloc[0], beam_pix_uvloc[1], j]
 
         weights_map[pix_u_range[0]:pix_u_range[1], pix_v_range[0]:pix_v_range[1],j] += beam_to_add
         influence_map[pix_u_range[0]:pix_u_range[1], pix_v_range[0]:pix_v_range[1],j] += weight_at_uvpix * beam_to_add
+
+        cube_inds = reform(round((bcontrib_locs[i,j,*] - uv_loc) / uv_binsize)+[u_pix,v_pix])
+        model_val = model_uv[cube_inds[0],cube_inds[1]]
+        val_add[i,j] = model_val*weight_at_uvpix
+
      endfor
+;;stop
      ;; make contours to ouline all contributing baselines
      level = max(beam_uv[*,*,j])*0.002d
      cgcontour, weights_map[*,*,j], map_uv_arr[*,0], map_uv_arr[*,0], levels=level, $
@@ -564,7 +574,9 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
           charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, font = font
   for i=0, n_freq_plot-1 do cgplot, /overplot, rebin([frequencies[freq_inds_plot[i]]]-0.2*delta_freq, 2), minmax(yticks), $
                                     color = freq_line_color, linestyle=2, thick=thick
-  oploterror, frequencies, phase_residual, phase_error, psym=10, color = residual_plot_color, errcolor = residual_plot_color, $
+
+  temp = residual_plot_color
+  oploterror, frequencies, phase_residual, phase_error, psym=10, errcolor = temp, $
               /nohat, thick = thick, errthick = thick
   cgplot, /overplot, freq_plot, res_plot, psym=10, color = residual_plot_color, thick = thick
 
@@ -749,8 +761,193 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
      wdelete, window_num
   endif
 
+
+  ;; Main figure movie frames
+  positions = fltarr(4, 4)
+  cb_positions = fltarr(4, 3)
+
+  cb_size_punits = 0.1
+  margin1_punits = [0.4, 0.35]
+  margin2_punits = [0.1, 0.25]
+
+  xlen_punits = 6.*(margin1_punits[0] + margin2_punits[0]) + 3. + 3.*cb_size_punits
+  ylen_punits = 2.*(margin1_punits[1] + margin2_punits[1] + 1.)
+
+  plot_size = 1./[xlen_punits, ylen_punits]
+  cb_size = [cb_size_punits, 1.] / [xlen_punits, ylen_punits]
+  margin1 = margin1_punits / [xlen_punits, ylen_punits]
+  margin2 = margin2_punits / [xlen_punits, ylen_punits]
+
+
+  for i=0, 2 do begin
+     positions[0, i] = (i+1.)*margin1[0] + i*(plot_size[0] + cb_size[0] + 2.*margin2[0] + margin1[0])
+     positions[2, i] = (i+1.)*(margin1[0] + plot_size[0]) + i*(cb_size[0] + 2.*margin2[0] + margin1[0])
+     cb_positions[0, i] = (i+1.)*(2.*margin1[0] + plot_size[0] + margin2[0]) + i*(cb_size[0] + margin2[0])
+     cb_positions[2, i] = (i+1.)*(2.*margin1[0] + plot_size[0] + margin2[0] + cb_size[0]) + i*margin2[0]
+  endfor
+
+  positions[1, 0:2] = 2.*margin1[1] + (plot_size[1] + margin2[1])
+  positions[3, 0:2] = 2.*(margin1[1] + plot_size[1]) + margin2[1]
+  cb_positions[1, *] = 2.*margin1[1] + (plot_size[1] + margin2[1])
+  cb_positions[3, *] = 2.*(margin1[1] + plot_size[1]) + margin2[1]
+
+ 
+  positions[*, 3] = [margin1[0], margin1[1], 1-margin2[0], margin1[1] + plot_size[1]]
+
+  size_factor = 200
+  xsize = xlen_punits * size_factor
+  ysize = ylen_punits * size_factor
+  window_num = 3
+
+  if windowavailable(window_num) then begin 
+     wset, window_num
+     if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+  endif else make_win = 1
+  if make_win then cgdisplay, wid=window_num, xsize = xsize, ysize = ysize, color='white'
+
+   if keyword_set(pub) then begin
+     charthick = 3
+     thick = 3
+     xthick = 3
+     ythick = 3
+     font = 1
+     charsize = 2
+  endif 
+
+  for j=0, n_freq-1 do begin
+     if keyword_set(grey_scale) then plotfile = base_path('plots') + 'single_use/multibaseline_movie_frames/multibaseline_freq' + $
+        number_formatter(j) + '_grey.eps' $
+     else plotfile = base_path('plots') + 'single_use/multibaseline_movie_frames/multibaseline_freq' + number_formatter(j) + '.eps'
+
+     cgerase, 'white'
+     if keyword_set(pub) then pson, file = plotfile, /eps 
+
+     ;; bottom plot
+     cgplot, freq_plot, res_plot*0, yrange = phase_plot_range, xstyle=1, xtitle = 'f (MHz)', ytick_get = yticks, ytitle = 'degrees', $
+             title = 'Residual Phase', position = positions[*, 3], psym=-3, axiscolor='black', color = 'black', $
+             charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, font = font
+     cgplot, /overplot, rebin([frequencies[j]]-0.1*delta_freq, 2), minmax(yticks), color = freq_line_color, linestyle=2, thick=thick
+
+     temp = residual_plot_color
+     oploterror, frequencies, phase_residual, phase_error, psym=10, errcolor = temp, $
+                 /nohat, thick = thick, errthick = thick
+     cgplot, /overplot, freq_plot, res_plot, psym=10, color = residual_plot_color, thick = thick
+
+     ;; influence plot
+     contrib_inds = where(mask[*,j] eq 1, count_contrib, complement = noncontrib_inds, ncomplement = count_noncontrib)
+     contrib_dists = sqrt((reform(bcontrib_locs[contrib_inds[*],j,0]) - uv_loc[0])^2d + $
+                          (reform(bcontrib_locs[contrib_inds[*],j,1]) - uv_loc[1])^2d)
+     dist_order = sort(contrib_dists)
+
+     cgplot, [uv_loc[0], uv_loc[1]], color = 'black', xrange = xrange, yrange = yrange, xstyle=5, ystyle=5, /nodata, $
+           title = number_formatter(frequencies[j]) + ' MHz', position = positions[*, 0], /noerase, charsize = charsize, $
+           charthick = charthick, font = font 
+
+     if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 13, /brewer
+     cgimage, norm_influence_map[*,*,j], /noerase, /overplot, /nointerp
+
+
+     for i=0, nb_contrib-1 do cgplot, /overplot, bcontrib_locs[i,j,0]+beam_shape.(j)[0,*], $
+                                      bcontrib_locs[i,j,1]+beam_shape.(j)[1,*], psym=-3, color = 'light grey', $
+                                      thick = thick/4d
+
+     cgplot, /overplot,outline_shape.(j)[0,*], outline_shape.(j)[1,*], psym=-3, color = 'black', thick = thick
+     
+
+     cgplot, /overplot, [uv_loc[0]], [uv_loc[1]], psym=1, thick=2, color = uv_mark_color
+
+     cgaxis, xaxis=0, xtick_get = xticks, xtitle = textoidl('u (\lambda)', font = font), xrange = xrange, xstyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, xthick = xthick, font = font
+     cgaxis, yaxis=0, ytick_get = yticks, ytitle = textoidl('v (\lambda)', font = font), yrange = yrange, ystyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, ythick = ythick, font = font
+     cgaxis, xaxis=1, xtickv = xticks, xtickname = replicate(' ', n_elements(xticks)), xrange = xrange, xstyle = 1, $
+             color = 'black', xthick = xthick
+     cgaxis, yaxis=1, ytickv = yticks, ytickname = replicate(' ', n_elements(yticks)), yrange = yrange, ystyle = 1, $
+             color = 'black', ythick = ythick
+
+     cgcolorbar, position = cb_positions[*, 0], /vertical, annotatecolor = 'black', minrange=0, maxrange = 1, $
+                 title = 'Influence', charsize = charsize, charthick = charthick, xthick = xthick, $
+                 ythick = ythick, font = font
+
+
+     ;; phase plot with integration region & baselines
+     cgplot, [uv_loc[0]], [uv_loc[1]], color = 'black', xrange = xrange, yrange = yrange, xstyle=5, ystyle=5, /nodata, $
+           title = number_formatter(frequencies[j]) + ' MHz', position = positions[*, 1], /noerase, charsize = charsize, $
+           charthick = charthick, font = font
+
+     if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer
+     cgimage, norm_plot_arr, /overplot,/noerase
+
+     for i=0, count_contrib-1 do cgplot, /overplot, [bcontrib_locs[contrib_inds[i],j,0]], [bcontrib_locs[contrib_inds[i],j,1]], $
+                                         psym = 16, color = baseline_loc_color, symsize=0.6
+     cgplot, /overplot,outline_shape.(j)[0,*], outline_shape.(j)[1,*], psym=-3, color = 'black', thick = thick
+
+     cgplot, /overplot, [uv_loc[0]], [uv_loc[1]], psym=1, thick=2, color = uv_mark_color
+
+     cgaxis, xaxis=0, xtick_get = xticks, xtitle = textoidl('u (\lambda)', font = font), xrange = xrange, xstyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, xthick = xthick, font = font
+     cgaxis, yaxis=0, ytick_get = yticks, ytitle = textoidl('v (\lambda)', font = font), yrange = yrange, ystyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, ythick = ythick, font = font
+     cgaxis, xaxis=1, xtickv = xticks, xtickname = replicate(' ', n_elements(xticks)), xrange = xrange, xstyle = 1, $
+             color = 'black', xthick = xthick
+     cgaxis, yaxis=1, ytickv = yticks, ytickname = replicate(' ', n_elements(yticks)), yrange = yrange, ystyle = 1, $
+             color = 'black', ythick = ythick
+
+     cgcolorbar, position = cb_positions[*, 1], /vertical, annotatecolor = 'black', minor=5, minrange=phase_range[0]*180d/!dpi, $
+                 maxrange = phase_range[1]*180d/!dpi, title = 'Phase (degrees)', charsize = charsize, $
+                 charthick = charthick, xthick = xthick, ythick = ythick, font = font
+
+     ;; phase plot with influence transparency
+    cgplot, [uv_loc[0]], [uv_loc[1]], color = 'black', xrange = xrange, yrange = yrange, xstyle=5, ystyle=5, /nodata, $
+             title = number_formatter(frequencies[j]) + ' MHz', position = positions[*, 2], /noerase, charsize = charsize, $
+             charthick = charthick, font = font
+
+     if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer
+     tvlct, r1, g1, b1, /get
+     dims = size(norm_plot_arr, /dimension)
+     norm_plot_arr_rgb = dblarr(3, dims[0], dims[1])
+     norm_plot_arr_rgb[0,*,*] = r1[norm_plot_arr]
+     norm_plot_arr_rgb[1,*,*] = g1[norm_plot_arr]
+     norm_plot_arr_rgb[2,*,*] = b1[norm_plot_arr]
+     
+     cgloadct, 0
+     tvlct, r2, g2, b2, /get
+     dims = size(norm_influence_map[*,*,j], /dimension)
+     norm_influence_map_rgb = bytarr(3, dims[0], dims[1])
+     norm_influence_map_rgb[0,*,*] = r2[norm_influence_map[*,*,j]]
+     norm_influence_map_rgb[1,*,*] = g2[norm_influence_map[*,*,j]]
+     norm_influence_map_rgb[2,*,*] = b2[norm_influence_map[*,*,j]]
+     
+     multiplier = (norm_influence_map_rgb/255d)*.3+.6
+     blend_image = norm_plot_arr_rgb * multiplier
+
+     cgimage, blend_image, /overplot,/noerase
+  
+     cgplot, /overplot,outline_shape.(j)[0,*], outline_shape.(j)[1,*], psym=-3, color = 'black', thick = thick
+
+     cgplot, /overplot, [uv_loc[0]], [uv_loc[1]], psym=1, thick=2, color = uv_mark_color
+
+     cgaxis, xaxis=0, xtick_get = xticks, xtitle = textoidl('u (\lambda)', font = font), xrange = xrange, xstyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, xthick = xthick, font = font
+     cgaxis, yaxis=0, ytick_get = yticks, ytitle = textoidl('v (\lambda)', font = font), yrange = yrange, ystyle = 1, $
+             color = 'black', charsize = charsize, charthick = charthick, ythick = ythick, font = font
+     cgaxis, xaxis=1, xtickv = xticks, xtickname = replicate(' ', n_elements(xticks)), xrange = xrange, xstyle = 1, $
+             color = 'black', xthick = xthick
+     cgaxis, yaxis=1, ytickv = yticks, ytickname = replicate(' ', n_elements(yticks)), yrange = yrange, ystyle = 1, $
+             color = 'black', ythick = ythick
+
+     if keyword_set(grey_scale) then cgloadct, 0, /reverse else cgloadct, 25, /brewer
+     cgcolorbar, position = cb_positions[*, 2], /vertical, annotatecolor = 'black', minor=5, minrange=phase_range[0]*180d/!dpi, $
+                 maxrange = phase_range[1]*180d/!dpi, title = 'Phase (degrees)', charsize = charsize, $
+                 charthick = charthick, xthick = xthick, ythick = ythick, font = font
+
+     if keyword_set(pub) then psoff
+
+  endfor
   tvlct, r, g, b
 
+  if keyword_set(pub) then wdelete, window_num
+     
 
 
   froot = base_path('data') + 'fhd_simulations_old/'
@@ -775,7 +972,7 @@ pro multibaseline_figures, refresh = refresh, pub = pub, grey_scale = grey_scale
 
   kpower_2d_plots, simfile, kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range = data_range, $
                    /no_title, pub = pub, grey_scale = grey_scale, /baseline_axis, /plot_wedge_line, wedge_amp = wedge_amp, $
-                   plotfile = plotfile, window_num = 3
+                   plotfile = plotfile, window_num = 4
 
 
 end
