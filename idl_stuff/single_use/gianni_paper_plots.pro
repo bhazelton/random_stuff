@@ -1,4 +1,4 @@
-pro gianni_paper_plots, pub = pub
+pro gianni_paper_plots, pub = pub, grey_scale = grey_scale
 
 
   froot = base_path('data') + 'healpix_maps/'
@@ -36,45 +36,46 @@ pro gianni_paper_plots, pub = pub
 
   kperp_plot_range = [min_kperp, max_kperp]
 
+  if keyword_set(grey_scale) then ftag = '_grey' else ftag = ''
   plotfiles = base_path('plots') + 'single_use/gianni_paper_' + $
-              ['initial_fig.eps', 'ps_sub_fig.eps', 'ps_sub_ratio_fig.eps', 'ps_sub_diff_fig.eps', 'pca5_sub_fig.eps', $
-               'pca5_sub_ratio_fig.eps', 'pca5_sub_diff_fig.eps']
+              ['initial_fig', 'ps_sub_fig', 'ps_sub_ratio_fig', 'ps_sub_diff_fig', 'pca5_sub_fig', $
+               'pca5_sub_ratio_fig', 'pca5_sub_diff_fig'] + ftag + '.eps'
 
   ;; make initial power figure
   kpower_2d_plots, savefiles_2d[0], kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range=data_range, $
-                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[0], $
+                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[0], grey_scale = grey_scale, $
                    cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11], /norm_2d, norm_factor = norm_factor
 
   ;; make point-source subtracted figures  
   kpower_2d_plots, savefiles_2d[1], kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range=data_range, $
-                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[1], window_num = 2, $
-                   cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11], /norm_2d, norm_factor = norm_factor
+                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[1], grey_scale = grey_scale, $
+                   window_num = 2, cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11], /norm_2d, norm_factor = norm_factor
 
   kpower_2d_plots, [savefiles_2d[1], savefiles_2d[0]], /ratio, kperp_plot_range = kperp_plot_range, $
                    kpar_plot_range = kpar_plot_range, data_range = ratio_data_range, /no_title, pub = pub, /baseline_axis, $
-                   charsize = charsize, plotfile=plotfiles[2], window_num = 3, $
+                   charsize = charsize, plotfile=plotfiles[2], grey_scale = grey_scale, window_num = 3, $
                    cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
   
   kpower_2d_plots, [savefiles_2d[0], savefiles_2d[1]], /diff, kperp_plot_range = kperp_plot_range, $
                    kpar_plot_range = kpar_plot_range, data_range = diff_data_range, /no_title, pub = pub, /baseline_axis, $
-                   charsize = charsize, plotfile=plotfiles[3], window_num = 4, /norm_2d, norm_factor = norm_factor, $
-                   cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
+                   charsize = charsize, plotfile=plotfiles[3], grey_scale = grey_scale, window_num = 4, /norm_2d, $
+                   norm_factor = norm_factor, cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
 
   ;; make PCA subtracted figure
 
   kpower_2d_plots, savefiles_2d[2], kperp_plot_range = kperp_plot_range, kpar_plot_range = kpar_plot_range, data_range=data_range, $
-                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[4], window_num = 5, $
-                   cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11], /norm_2d, norm_factor = norm_factor
+                   /no_title, pub = pub, /baseline_axis, charsize = charsize, plotfile=plotfiles[4], grey_scale = grey_scale, $
+                   window_num = 5, cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11], /norm_2d, norm_factor = norm_factor
 
   kpower_2d_plots, [savefiles_2d[2], savefiles_2d[0]], /ratio, kperp_plot_range = kperp_plot_range, $
                    kpar_plot_range = kpar_plot_range, data_range = ratio_data_range, /no_title, pub = pub, /baseline_axis, $
-                   charsize = charsize, plotfile=plotfiles[5], window_num = 6, $
+                   charsize = charsize, plotfile=plotfiles[5], grey_scale = grey_scale, window_num = 6, $
                    cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
   
   kpower_2d_plots, [savefiles_2d[0], savefiles_2d[2]], /diff, kperp_plot_range = kperp_plot_range, $
                    kpar_plot_range = kpar_plot_range, data_range = diff_data_range, /no_title, pub = pub, /baseline_axis, $
-                   charsize = charsize, plotfile=plotfiles[6], window_num = 7, /norm_2d, norm_factor = norm_factor, $
-                   cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
+                   charsize = charsize, plotfile=plotfiles[6], grey_scale = grey_scale, window_num = 7, /norm_2d, $
+                   norm_factor = norm_factor, cb_margin = [0.14, 0.04], margin = [0.15, 0.1, 0.02, 0.11]
 
  
 end
