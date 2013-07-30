@@ -1,7 +1,7 @@
-pro test_hpx_weights, pol, log=log, variance=variance, sum_freq = sum_freq, all_freq = all_freq
+pro test_hpx_weights, pol, log=log, variance=variance, sum_freq = sum_freq, all_freq = all_freq, freq_ch = freq_ch
 
-  datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_even_cube.sav' 
-  ;;datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_odd_cube.sav' 
+  ;;datafile = base_path('data') + 'fhd_ps_data/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_even_cube.sav' 
+  datafile = base_path('data') + 'fhd_ps_data/fhd_v14/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_even_cube.sav' 
   ;;datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
 
   if n_elements(pol) eq 0 then pol = 'xx'
@@ -28,6 +28,7 @@ pro test_hpx_weights, pol, log=log, variance=variance, sum_freq = sum_freq, all_
   
   temp = total(abs(hpx_weight), 1)
   wh_freq0 = where(temp eq 0, count_freq0, complement=wh_freq_n0, ncomplement = count_freq_n0)
+ 
   if count_freq_n0 eq 0 then message, 'weights are all 0'
   if count_freq0 gt 0 then print, number_formatter(count_freq0) + ' of ' + number_formatter(n_elements(temp)) + $
                                   ' frequencies have all 0 weights'
@@ -40,7 +41,12 @@ pro test_hpx_weights, pol, log=log, variance=variance, sum_freq = sum_freq, all_
      data = total(hpx_weight[*,wh_freq_n0], 2)
      freq_str = 'All non-zero Channels'
   endif else begin
-     freq_ind = wh_freq_n0[0]
+     if n_elements(freq_ch) ne 0 then begin
+        if temp[freq_ch] eq 0 then begin
+           print, 'specified channel has 0 weights. Using first non-zero channel instead'
+           freq_ind = wh_freq_n0[0]
+        endif else freq_ind = freq_ch
+     endif else freq_ind = wh_freq_n0[0]
      data = hpx_weight[*,freq_ind]
      freq_str = 'Channel ' + number_formatter(freq_ind)
   endelse
