@@ -104,7 +104,7 @@ if (fits_type eq 3) then begin
     tags = tag_names(stc)
     for i = 0, ntags - 1 do begin
        junk = strpos(strupcase(tags[i]), 'PIX')
-       if (junk ne -1 and (size(stc.(i), /type) eq 2 or size(stc.(i), /type) eq 3)) then begin
+       if (junk ne -1 and (size(stc.(i), /type) eq 2 or size(stc.(i), /type) eq 3 or size(stc.(i), /type) eq 14)) then begin
           pixel_col_num = i
           break
        endif
@@ -118,6 +118,7 @@ if (fits_type eq 3) then begin
     if (select_map eq -1 and select ne -1) then select_map = index_word(tag_names(stc), select,value=select_name,  err=error1)
 
     if (error1 ne 0 || error2 ne 0 || select_map le 0 || select_pix le 0) then begin
+
         print,'wrong select in '+routine
         print,'PIXEL',select_def,tag_names(stc)
         error = 1
