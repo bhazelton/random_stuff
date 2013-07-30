@@ -3,6 +3,12 @@ pro quick_image, image, xvals, yvals, data_range = data_range, log=log, xtitle =
   
   ;; precaution in case a slice is passed in but it still appears > 2d (ie shallow dimension)
   image = reform(image)
+  if n_elements(size(image, /dim)) ne 2 then message, 'image must be 2 dimensional'
+
+  if max(abs(imaginary(image))) gt 0 then begin
+     print, 'image is complex, showing real part'
+     image = real_part(image)
+  endif
 
    if keyword_set(log) then begin
      wh_low = where(image le 0, count_low, complement = wh_good, ncomplement = count_good)
@@ -57,7 +63,8 @@ pro quick_image, image, xvals, yvals, data_range = data_range, log=log, xtitle =
 
   cgimage, plot_image, maxvalue = img_range[1], minvalue = img_range[0], position = [.15,.1,.8,.95], /axes, xrange = xrange, $
            yrange = yrange, xtitle = xtitle, ytitle = ytitle, title = title, axkeywords = axkeywords
-  cgcolorbar, range=data_range, position = [.92, .1,.95,.95], /vertical, ylog = cb_log, minor = minor, ticknames = ticknames, $
+ 
+ cgcolorbar, range=data_range, position = [.92, .1,.95,.95], /vertical, ylog = cb_log, minor = minor, ticknames = ticknames, $
               divisions=divisions, ytickv = ticks, tickinterval=tickinterval, format='exponent'
  
   tvlct, r, g, b
