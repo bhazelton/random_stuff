@@ -72,7 +72,7 @@ IF Keyword_Set(beam_recalculate) OR Keyword_Set(grid_recalculate) OR $
 IF Keyword_Set(force_data) THEN data_flag=1
 IF Keyword_Set(force_no_data) THEN data_flag=0
 
-
+file_path_vis = vis_file_list[0]
 IF Keyword_Set(data_flag) THEN BEGIN
     ;info_struct=mrdfits(filepath(filename+ext,root_dir=rootdir('mwa'),subdir=data_directory),2,info_header,/silent)
     IF file_test(file_path_vis) EQ 0 THEN BEGIN
