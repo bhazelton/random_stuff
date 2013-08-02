@@ -13,7 +13,8 @@ IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=145
 image_filter_fn='filter_uv_radial' ;applied ONLY to output images
 
-data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))])
+;;data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))])
+data_directory = '/data2/MWA/FHD' + filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))])
 vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
