@@ -188,7 +188,8 @@ ENDCASE
 pix_inds = [550, 620]
 model_uv[pix_inds] = 1.
 
-model_vis = visibility_degrid(model_uv, flag_arr,obs,psf,params,$
+polarization = 0
+model_vis = visibility_degrid(model_uv, flag_arr[polarization],obs,psf,params,$
     timing=timing,polarization=polarization,silent=silent,$
     complex=complex_beam,double=double_precison_beam)
 
