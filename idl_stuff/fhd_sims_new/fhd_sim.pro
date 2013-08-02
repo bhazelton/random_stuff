@@ -4,12 +4,11 @@ except=!except
 !except=0 
 heap_gc
 
-IF N_Elements(version) EQ 0 THEN version=0
+IF N_Elements(version) EQ 0 THEN version=300
 
 IF N_Elements(recalculate_all) EQ 0 THEN recalculate_all=1
 IF N_Elements(cleanup) EQ 0 THEN cleanup=0
 IF N_Elements(ps_export) EQ 0 THEN ps_export=1
-IF N_Elements(version) EQ 0 THEN version=0
 IF N_Elements(channel) EQ 0 THEN channel=145
 image_filter_fn='filter_uv_radial' ;applied ONLY to output images
 
