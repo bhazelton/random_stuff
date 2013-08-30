@@ -1,5 +1,5 @@
-pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, refresh_ps = refresh_ps, $
-                     refresh_binning = refresh_binning, pol_inc = pol_inc, $
+pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, refresh_ps = refresh_ps, dft_ian = dft_ian, $
+                     refresh_binning = refresh_binning, pol_inc = pol_inc, sim = sim, $
                      no_spec_window = no_spec_window, spec_window_type = spec_window_type, noise_sim = noise_sim, $
                       cut_image = cut_image, individual_plots = individual_plots, pub = pub
 
@@ -19,9 +19,13 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
 
      datafile =  rts_fits2imagecube(datafiles, weightfiles, variancefiles, pol_inc, save_path = froot)
 
+  endif else if keyword_set(sim) then begin
+     datafile = base_path('data') + 'fhd_sim_data/fhd_v300/ps/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926193959_' $
+                + ['even','odd']+ '_cube.sav' 
+
   endif else begin
      ;;datafile = base_path('data') + 'fhd_ps_data/multi_freq_residuals_cube_healpix.sav'
-     ;;datafile = base_path('data') + 'fhd_ps_data/fhd_v107/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926193959_' + $
+     ;;datafile = base_path('data') + 'fhd_ps_data/fhd_v101/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926193959_' + $
      datafile = base_path('data') + 'fhd_ps_data/fhd_v15/Combined_obs_EOR1_P00_145_20110926193959-EOR1_P00_145_20110926200503_' + $
                 ['even','odd']+ '_cube.sav' 
   endelse
@@ -34,7 +38,7 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
   ;;   (it's not even monotonic) so some experimenting is required. The memory required is approximately linear -- 
   ;;   the higher this value the more memory required.
   ;; The maximum value of this parameter is the number of frequency slices in the cube 
-  ;;   (if its set too large it will be reduced to the maximum)
+  ;;   (if it's set too large it will be reduced to the maximum)
  
   dft_fchunk = 1
 
@@ -50,7 +54,9 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
   endif
 
   if keyword_set(rts) then std_savepath = base_path('data') + 'rts_data/' $
+  else if keyword_set(sim) then std_savepath = base_path('data') + 'fhd_sim_data/' $
   else std_savepath = base_path('data') + 'fhd_ps_data/'
+
   if n_elements(save_path) gt 0 then begin
      pos = strpos(save_path, std_savepath)
      if pos ne -1 then save_path_ext = strmid(save_path, pos + strlen(std_savepath)) else save_path_ext = ''
@@ -66,6 +72,7 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
   ;; plot_path specifies a location to save plot files.
   ;; If this parameter is not set, the plots will be saved in the same directory as the datafile.
   if keyword_set(rts) then plot_path = base_path('plots') + 'power_spectrum/rts_data/' + save_path_ext $
+  else if keyword_set(sim) then plot_path = base_path('plots') + 'power_spectrum/fhd_sim/' + save_path_ext $
   else plot_path = base_path('plots') + 'power_spectrum/fhd_data/' + save_path_ext
   if not file_test(plot_path, /directory) then file_mkdir, plot_path
 
@@ -129,7 +136,7 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
                   pol_inc = pol_inc, rts = rts, $
                   refresh_dft = refresh_dft, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
                   freq_ch_range = freq_ch_range, no_spec_window = no_spec_window, spec_window_type = spec_window_type, $
-                  noise_sim = noise_sim, cut_image = cut_image, $
+                  noise_sim = noise_sim, cut_image = cut_image, dft_ian = dft_ian, $
                   log_kpar = log_kpar, log_kperp = log_kperp, kpar_bin = kpar_bin, kperp_bin = kperp_bin, $
                   log_k1d = log_k1d, k1d_bin = k1d_bin, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, $
                   data_range = data_range, baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv, $
