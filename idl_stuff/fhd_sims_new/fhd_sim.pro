@@ -271,7 +271,7 @@ pro fhd_sim, data_directory, version = version
            count_ind = 0
            freq_i=0
            while count_ind le 0 do begin
-              pix_ind = where(*weights_arr[0,freq_i] eq max(abs(*weights_arr[0,freq_i])), count_ind)
+              pix_ind = where(*weights_arr1[0,freq_i] eq max(abs(*weights_arr1[0,freq_i])), count_ind)
               freq_i++
            endwhile
            pix_ind = pix_ind[0]
