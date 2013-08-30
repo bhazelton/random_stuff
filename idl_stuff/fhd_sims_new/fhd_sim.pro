@@ -15,7 +15,7 @@ pro fhd_sim, data_directory, version = version, even_only=even_only, odd_only=od
   ;;data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))])
   ;;data_directory = '/data2/MWA/FHD/' + filepath('',root='DATA',subdir=['X16','EOR1',Strn(Floor(channel))])
   if n_elements(data_directory) eq 0 then data_directory = base_path('data') + 'fhd_sim_data/'
-  vis_file_list=file_search(data_directory,'*_cal.uvfits',count=n_files)
+  vis_file_list=(file_search(data_directory,'*_cal.uvfits',count=n_files))[0]
   fhd_file_list=fhd_path_setup(vis_file_list,version=version)
   healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version)
   catalog_file_path=filepath('MRC_full_radio_catalog.fits',root=rootdir('FHD'),subdir='catalog_data')
