@@ -270,20 +270,10 @@ pro fhd_sim, data_directory, version = version, even_only=even_only, odd_only=od
         dirty_arr1=vis_model_freq_split(0,obs,psf,params,flag_arr,model_uv_arr=0,fhd_file_path=file_path_fhd, $
                                         vis_file_path=file_path_vis, n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1, $
                                         variance=variance_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
-        
-        ;;uv_mask=fltarr(dimension,elements)
-        ;;uv_mask[where(*weights_arr1[0] OR *weights_arr1[1])]=1
-        
-        if max(abs(*weights_arr1[0])) eq 0 and max(abs(*weights_arr1[0])) eq 0 then begin
-           print, 'weights are zero, fbin ' + number_formatter(i)
-           model_arr1 = dirty_arr1 
-        endif else $
-           model_arr1=vis_model_freq_split(0,obs,psf,params,flag_arr,fhd_file_path=file_path_fhd,vis_file_path=file_path_vis, $
-                                           model_uv_arr = model_uv_arr, n_avg=n_avg,timing=t_split,/no_data,/fft,uv_mask=uv_mask, $
-                                           even_only=even_only,odd_only=odd_only, $
-                                           _Extra=extra)
-        if max(abs(*weights_arr1[0])) gt 0 and max(abs(*model_arr1[0])) eq 0 then $
-           print, 'model is zero but weights are not, fbin ' + number_formatter(i)
+                
+        model_arr1=vis_model_freq_split(0,obs,psf,params,flag_arr,fhd_file_path=file_path_fhd,vis_file_path=file_path_vis, $
+                                        model_uv_arr = model_uv_arr, n_avg=n_avg,timing=t_split,/no_data,/fft, $
+                                        even_only=even_only,odd_only=odd_only,_Extra=extra)
         
         FOR pol_i=0,n_pol-1 DO FOR freq_i=0,n_freq_use-1 DO BEGIN
            ;;(*residual_hpx_arr[pol_i,freq_i])[*hpx_ind_map[obs_i]]+=$
