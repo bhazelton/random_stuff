@@ -1,4 +1,4 @@
-pro fhd_sim, data_directory, version = version, even_only=even_only, odd_only=odd_only
+pro fhd_sim, data_directory, version = version
 
   except=!except
   !except=0 
