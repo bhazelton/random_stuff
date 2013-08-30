@@ -258,7 +258,7 @@ pro fhd_sim, data_directory, version = version
                                         vis_file_path=file_path_vis, n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1, $
                                         variance=variance_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
                 
-        if i eq 0 then begin
+        if cube_i eq 0 then begin
            ;; make model uv image
            CASE 1 OF
               Keyword_Set(complex_beam) AND Keyword_Set(double_precison_beam): model_uv=Dcomplexarr(dimension,dimension)
