@@ -176,19 +176,6 @@ pro fhd_sim, data_directory, version = version
      flag_arr0=0
   endif
   
-  ;; make model uv image
-  CASE 1 OF
-     Keyword_Set(complex_beam) AND Keyword_Set(double_precison_beam): model_uv=Dcomplexarr(dimension,dimension)
-     Keyword_Set(double_precison_beam): model_uv=Dblarr(dimension,dimension)
-     Keyword_Set(complex_beam): model_uv=Complexarr(dimension,dimension)
-     ELSE: model_uv=Fltarr(dimension,dimension)
-  ENDCASE
-  
-  ;; just one non-zero mode for now
-  pix_inds = [485,486]
-  model_uv[pix_inds] = 1.
-  model_uv_arr = Ptrarr(n_pol,/allocate)
-  for i=0, n_pol-1 do *model_uv_arr[i] = model_uv
   
   ;;model_vis = Ptrarr(n_pol,/allocate)
   ;;for pol_i = 0, n_pol-1 do model_vis[pol_i] = visibility_degrid(model_uv, flag_arr[pol_i],obs,psf,params,$
@@ -271,6 +258,29 @@ pro fhd_sim, data_directory, version = version
                                         vis_file_path=file_path_vis, n_avg=n_avg,timing=t_split1,/fft,weights=weights_arr1, $
                                         variance=variance_arr1,even_only=even_only,odd_only=odd_only,_Extra=extra) 
                 
+        if i eq 0 then begin
+           ;; make model uv image
+           CASE 1 OF
+              Keyword_Set(complex_beam) AND Keyword_Set(double_precison_beam): model_uv=Dcomplexarr(dimension,dimension)
+              Keyword_Set(double_precison_beam): model_uv=Dblarr(dimension,dimension)
+              Keyword_Set(complex_beam): model_uv=Complexarr(dimension,dimension)
+              ELSE: model_uv=Fltarr(dimension,dimension)
+           ENDCASE
+           
+           ;; just one non-zero mode for now
+           count_ind = 0
+           freq_i=0
+           while count_ind lt 0 do begin
+              pix_ind = where(*weights_arr[0,freq_i] eq max(abs(*weights_arr[0,freq_i])), count_ind)
+              freq_i++
+           endwhile
+           pix_ind = pix_ind[0]
+           pix_inds = [pix_ind mod fix(dimension),pix_ind/fix(dimension)]
+           model_uv[pix_inds] = 1.
+           model_uv_arr = Ptrarr(n_pol,/allocate)
+           for i=0, n_pol-1 do *model_uv_arr[i] = model_uv
+        endif
+
         model_arr1=vis_model_freq_split(0,obs,psf,params,flag_arr,fhd_file_path=file_path_fhd,vis_file_path=file_path_vis, $
                                         model_uv_arr = model_uv_arr, n_avg=n_avg,timing=t_split,/no_data,/fft, $
                                         even_only=even_only,odd_only=odd_only,_Extra=extra)
