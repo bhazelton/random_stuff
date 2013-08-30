@@ -2,7 +2,7 @@
 ;base_path = '/Users/bryna/Documents/Physics/bryna_svn/idl_working/'
 git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
-path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro', 'mwa', $
+path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro/' + ['','jhuapl/'], 'mwa', $
                         'power_spectrum', $;;'fhd_sims', $
                         'single_use', $
                         'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
