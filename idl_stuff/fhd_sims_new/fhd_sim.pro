@@ -176,12 +176,6 @@ pro fhd_sim, data_directory, version = version
      flag_arr0=0
   endif
   
-  
-  ;;model_vis = Ptrarr(n_pol,/allocate)
-  ;;for pol_i = 0, n_pol-1 do model_vis[pol_i] = visibility_degrid(model_uv, flag_arr[pol_i],obs,psf,params,$
-  ;;                                                                timing=timing,polarization=pol_i,silent=silent,$
-  ;;                                                               complex=complex_beam,double=double_precison_beam)
-
   n_avg = 8
   n_freq_use=n_freq/n_avg
   
@@ -276,7 +270,10 @@ pro fhd_sim, data_directory, version = version
            endwhile
            pix_ind = pix_ind[0]
            pix_inds = [pix_ind mod fix(dimension),pix_ind/fix(dimension)]
+           print, pix_inds
            model_uv[pix_inds] = 1.
+
+           model_uv[*] = 1.
            model_uv_arr = Ptrarr(n_pol,/allocate)
            for i=0, n_pol-1 do *model_uv_arr[i] = model_uv
         endif
