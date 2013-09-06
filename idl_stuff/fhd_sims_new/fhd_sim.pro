@@ -213,31 +213,37 @@ pro fhd_sim, data_directory, version = version
   hpx_ind_map=healpix_combine_inds(hpx_cnv,hpx_inds=hpx_inds)
   n_hpx=N_Elements(hpx_inds)
   
-  dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
-  model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
-  weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
-  variance_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
-  FOR pol_i=0,n_pol-1 DO BEGIN
-     FOR freq_i=0,n_freq_use-1 DO BEGIN
-        ;;*residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
-        *model_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
-        *dirty_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
-        *weights_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
-        *variance_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
-     ENDFOR
-  ENDFOR    
- 
+  orig_flag = Ptrarr(n_pol,/allocate)
+  FOR pol_i=0,n_pol-1 DO *orig_flag[pol_i] = *flag_arr[pol_i]
   for cube_i = 0, 1 do begin
      case cube_set[cube_i] of
         'even': begin
            even_only=1
            odd_only=0
+           print, 'generating even cube'
         end
         'odd': begin
+           FOR pol_i=0,n_pol-1 DO *flag_arr[pol_i] = *orig_flag[pol_i]
            even_only=0
            odd_only=1
+           print, 'generating odd_cube'
         end
      endcase
+
+     dirty_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+     model_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+     weights_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+     variance_hpx_arr=Ptrarr(n_pol,n_freq_use,/allocate)
+ 
+     FOR pol_i=0,n_pol-1 DO BEGIN
+        FOR freq_i=0,n_freq_use-1 DO BEGIN
+           ;;*residual_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+           *model_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+           *dirty_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+           *weights_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+           *variance_hpx_arr[pol_i,freq_i]=fltarr(n_hpx)
+        ENDFOR
+     ENDFOR
      
      FOR obs_i=0,n_files-1 DO BEGIN 
         fhd_path=fhd_file_list[obs_i]
@@ -273,7 +279,6 @@ pro fhd_sim, data_directory, version = version
            print, pix_inds
            model_uv[pix_inds] = 1.
 
-           model_uv[*] = 1.
            model_uv_arr = Ptrarr(n_pol,/allocate)
            for i=0, n_pol-1 do *model_uv_arr[i] = model_uv
         endif
@@ -297,7 +302,6 @@ pro fhd_sim, data_directory, version = version
         ENDFOR
         
      ENDFOR
-     Ptr_free,hpx_cnv
      
      dirty_xx_cube=fltarr(n_hpx,n_freq_use)
      dirty_yy_cube=fltarr(n_hpx,n_freq_use)
