@@ -14,7 +14,7 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','
 ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
 ian_path = '/Users/bryna/Documents/Physics/FHD/'
-ian_path_dirs = ian_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core']
+ian_path_dirs = ian_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data']
 
 path_dirs = [ps_path_dirs, path_dirs, ian_path_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
