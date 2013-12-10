@@ -7,15 +7,18 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
   ;; The only required input is the datafile name (including the full path)
     
   if keyword_set(rts) then begin
-    froot = base_path('data') + 'rts_data/test2/'
+    froot = base_path('data') + 'rts_data/wellington_data/'
     
-    data_dir = froot + 'BdaggerV/'
+    ;data_dir = froot + 'BdaggerV/'
+    data_dir = froot + 'Images/'
     datafiles = file_search(data_dir + '*.fits')
     
-    weights_dir = froot + 'Bdagger1/'
+    ;weights_dir = froot + 'Bdagger1/'
+    weights_dir = froot + 'Weights/'
     weightfiles = file_search(weights_dir + '*.fits')
     
-    variance_dir = froot + 'BdaggerB/'
+    ;variance_dir = froot + 'BdaggerB/'
+    variance_dir = froot + 'Variances/'
     variancefiles = file_search(variance_dir + '*.fits')
     
     datafile =  rts_fits2imagecube(datafiles, weightfiles, variancefiles, pol_inc, save_path = froot)
@@ -39,6 +42,17 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
       ['even','odd']+ '_cube.sav'
       
     plot_filebase = fhd_type + '_' + obs_name
+    
+    sigma_range = [1e1, 1e4]
+    nev_range = [1e2, 1e5]
+    data_range = [5e-2, 5e9]
+    noise_range = [5e2, 5e7]
+    nnr_range = [1e-2, 1e2]
+    snr_range = [5e-5, 5e5]
+    
+    noise_range = nev_range
+    
+    
   endelse
   
   
@@ -145,14 +159,6 @@ if not file_test(plot_path, /directory) then file_mkdir, plot_path
 ;; kperp_linear_axis = 1
 ;; kpar_linear_axis = 1
 
-sigma_range = [1e1, 1e4]
-nev_range = [1e2, 1e5]
-data_range = [5e-2, 5e9]
-noise_range = [5e2, 5e7]
-nnr_range = [1e-2, 1e2]
-snr_range = [5e-5, 5e5]
-
-noise_range = nev_range
 
 fhd_data_plots, datafile, dft_fchunk=dft_fchunk, plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
   pol_inc = pol_inc, rts = rts, $
