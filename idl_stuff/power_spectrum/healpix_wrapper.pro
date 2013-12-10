@@ -2,7 +2,7 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
     refresh_binning = refresh_binning, pol_inc = pol_inc, sim = sim, $
     no_spec_window = no_spec_window, spec_window_type = spec_window_type, noise_sim = noise_sim, $
     cut_image = cut_image, individual_plots = individual_plots, plot_filebase = plot_filebase, pub = pub, $
-    kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis
+    kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, deconvolved = deconvolved, integrated = integrated
     
   ;; The only required input is the datafile name (including the full path)
     
@@ -29,9 +29,16 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
     ;;           'EOR1_P00_145_20110926193959_' + $
     ;;datafile = base_path('data') + 'fhd_ps_data/X16_EOR1/fhd_v15/Combined_obs_EOR1_P00_145_20110926193959-' + $
     ;;           'EOR1_P00_145_20110926200503_' + $
-    ;;datafile = base_path('data') + 'fhd_ps_data/128T_cubes/firstpass/Combined_obs_1061316296-1061316296_' + $
-    datafile = base_path('data') + 'fhd_ps_data/128T_cubes/deconvolved/Combined_obs_1061316296-1061316296_' + $
+    if keyword_set(deconvolved) then fhd_type = 'deconvolved' else fhd_type = 'firstpass'
+    if keyword_set(integrated) then begin
+      fhd_type = 'integrated_' + fhd_type
+      obs_name = '1061311664-1061320816'
+    endif else obs_name = '1061316296-1061316296'
+    
+    datafile = base_path('data') + 'fhd_ps_data/128T_cubes/' + fhd_type + '/Combined_obs_' + obs_name + '_' + $
       ['even','odd']+ '_cube.sav'
+      
+    plot_filebase = fhd_type + '_' + obs_name
   endelse
   
   
@@ -79,7 +86,7 @@ pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, re
 else plot_path = base_path('plots') + 'power_spectrum/fhd_data/' + save_path_ext
 if not file_test(plot_path, /directory) then file_mkdir, plot_path
 
-  ;; plot_filebase specifies a base name to use for the plot files
+;; plot_filebase specifies a base name to use for the plot files
 
 
 ;; freq_ch_range specifies which frequency channels to include in the power spectrum.
@@ -138,11 +145,14 @@ if not file_test(plot_path, /directory) then file_mkdir, plot_path
 ;; kperp_linear_axis = 1
 ;; kpar_linear_axis = 1
 
-data_range = [5e-2, 5e7]
-noise_range = [5e3, 5e5]
-nnr_range = [1e-2, 2]
-snr_range = [5e-5, 5e3]
+sigma_range = [1e1, 1e4]
+nev_range = [1e2, 1e5]
+data_range = [5e-2, 5e9]
+noise_range = [5e2, 5e7]
+nnr_range = [1e-2, 1e2]
+snr_range = [5e-5, 5e5]
 
+noise_range = nev_range
 
 fhd_data_plots, datafile, dft_fchunk=dft_fchunk, plot_path = plot_path, plot_filebase = plot_filebase, save_path = save_path, savefilebase = savefilebase, $
   pol_inc = pol_inc, rts = rts, $
