@@ -1,13 +1,13 @@
 pro healpix_wrapper, rts = rts, version = version, refresh_dft = refresh_dft, refresh_ps = refresh_ps, dft_ian = dft_ian, $
-    refresh_binning = refresh_binning, pol_inc = pol_inc, sim = sim, $
-    no_spec_window = no_spec_window, spec_window_type = spec_window_type, noise_sim = noise_sim, $
+    refresh_binning = refresh_binning, pol_inc = pol_inc, sim = sim, plot_slices = plot_slices, slice_type = slice_type, $
+    no_spec_window = no_spec_window, spec_window_type = spec_window_type, noise_sim = noise_sim, std_power = std_power, $
     cut_image = cut_image, individual_plots = individual_plots, plot_filebase = plot_filebase, pub = pub, $
     kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, deconvolved = deconvolved, integrated = integrated
     
   ;; The only required input is the datafile name (including the full path)
     
   if keyword_set(rts) then begin
-    froot = base_path('data') + 'rts_data/wellington_data/'
+    froot = base_path('data') + 'rts_data/wellington_data1/'
     
     ;data_dir = froot + 'BdaggerV/'
     data_dir = froot + 'Images/'
@@ -164,9 +164,10 @@ fhd_data_plots, datafile, dft_fchunk=dft_fchunk, plot_path = plot_path, plot_fil
   pol_inc = pol_inc, rts = rts, $
   refresh_dft = refresh_dft, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
   freq_ch_range = freq_ch_range, no_spec_window = no_spec_window, spec_window_type = spec_window_type, $
-  noise_sim = noise_sim, cut_image = cut_image, dft_ian = dft_ian, $
+  noise_sim = noise_sim, std_power = std_power, cut_image = cut_image, dft_ian = dft_ian, $
   log_kpar = log_kpar, log_kperp = log_kperp, kpar_bin = kpar_bin, kperp_bin = kperp_bin, $
   log_k1d = log_k1d, k1d_bin = k1d_bin, kperp_linear_axis = kperp_linear_axis, kpar_linear_axis = kpar_linear_axis, $
+  plot_slices = plot_slices, slice_type = slice_type, $
   data_range = data_range, sigma_range = sigma_range, nev_range = nev_range, snr_range = snr_range, noise_range = noise_range, nnr_range = nnr_range, $
   baseline_axis = baseline_axis, delay_axis = delay_axis, hinv = hinv, $
   plot_wedge_line = plot_wedge_line, grey_scale = grey_scale, individual_plots = individual_plots, pub = pub
