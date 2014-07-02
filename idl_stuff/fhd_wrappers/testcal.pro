@@ -21,7 +21,7 @@ image_filter_fn='' ;applied ONLY to output images
 ;;IF StrLowCase(!version.os_family) EQ 'unix' THEN data_directory=rootdir('mwa')+filepath('',root='DATA',subdir=['128T','test']) $
 ;;    ELSE data_directory=rootdir('mwa')+filepath('',root='DATA3',subdir=['128T','testcal'])
 ;;data_directory = base_path('data') + 'fhd_ps_data/EOR1_P00_145_20110926193959/'
-data_directory = base_path('data') + 'fhd_ps_data/1061316296/'
+data_directory = base_path('data') + 'fhd_cal_data/1061316296/'
 vis_file_list=file_search(data_directory,'*.uvfits',count=n_files)
 fhd_file_list=fhd_path_setup(vis_file_list,version=version,_Extra=extra)
 healpix_path=fhd_path_setup(output_dir=data_directory,subdir='Healpix',output_filename='Combined_obs',version=version,_Extra=extra)
@@ -48,6 +48,7 @@ psf_resolution=8.
 calib_freq_func = 1
 max_cal_iter=30L
 initial_calibration = data_directory + 'fhd_bjh_1/1061316296_cal.sav'
+;initial_calibration = data_directory + '1061316296_cal_old.sav'
 ;calibration_visibilities_subtract=1
 
 general_obs,cleanup=cleanup,ps_export=ps_export,recalculate_all=recalculate_all,export_images=export_images,version=version,$

@@ -2,7 +2,7 @@
 ;base_path = '/Users/bryna/Documents/Physics/bryna_svn/idl_working/'
 git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
-path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'astron/pro/' + ['','jhuapl/'], 'mwa', $
+path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'coyote/public', 'astron/pro/' + ['','jhuapl/'], 'mwa', $
                         'power_spectrum', $;;'fhd_sims', $
                         'single_use', $
                         'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
@@ -11,12 +11,16 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','
                          ;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
                          ;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
 
-ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
+;fhdps_utils_path = '/Users/bryna/Documents/Physics/fhdps_utils/'
+;fhdps_utils_dirs = fhdps_utils_path
 
-ian_path = '/Users/bryna/Documents/Physics/FHD/'
-ian_path_dirs = ian_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data']
+ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'fhdps_utils','ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
-path_dirs = [ps_path_dirs, path_dirs, ian_path_dirs]
+fhd_path = '/Users/bryna/Documents/Physics/FHD/'
+fhd_path_dirs = fhd_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data']
+
+;path_dirs = [fhdps_utils_dirs, ps_path_dirs, path_dirs, fhd_path_dirs]
+path_dirs = [ps_path_dirs, path_dirs, fhd_path_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
 
 ;!path = path_string + ':/home/dsmith/rhessi/code:' + !path
@@ -34,3 +38,4 @@ loadct,39
 
 ;; added this to prevent BadMatch errors on Lion, see coyote tip: http://www.idlcoyote.com/misc_tips/badmatch.php
 Device, RETAIN=2
+

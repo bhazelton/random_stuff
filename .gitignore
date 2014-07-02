@@ -1,0 +1,9 @@
+*.DS_Store
+idl_stuff/mwa/Healpix_tmp.fits
+idl_stuff/mwa/Healpix_tmp.png
+
+# libraries
+idl_stuff/Healpix_3.11/*
+idl_stuff/astron/*
+idl_stuff/coyote/*
+idl_stuff/IDLWorkspace71/*
