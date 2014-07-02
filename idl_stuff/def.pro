@@ -2,18 +2,16 @@
 ;base_path = '/Users/bryna/Documents/Physics/bryna_svn/idl_working/'
 git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
 
-path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote', 'coyote/public', 'astron/pro/' + ['','jhuapl/'], 'mwa', $
-                        'power_spectrum', $;;'fhd_sims', $
-                        'single_use', $
-                        'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
-                                                    ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + $
-                                                    ['cgis', 'obsolete_astron']]] ;; , $
-                         ;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
-                         ;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
-
+path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote/' + ['', 'public/'], 'astron/pro/' + ['','jhuapl/'], $
+  'mwa', 'power_spectrum', $;;'fhd_sims', $
+  'single_use', 'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
+  ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + ['cgis', 'obsolete_astron']]] ;; , $
+;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
+;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
+  
 ;fhdps_utils_path = '/Users/bryna/Documents/Physics/fhdps_utils/'
 ;fhdps_utils_dirs = fhdps_utils_path
-
+  
 ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'fhdps_utils','ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
 fhd_path = '/Users/bryna/Documents/Physics/FHD/'
