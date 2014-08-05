@@ -1,15 +1,62 @@
-pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = uv_avg
+pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = uv_avg, apply_beam = apply_beam, use_sim = use_sim
 
-  freq_arr = findgen(384)*0.08+120
-  n_freq = n_elements(freq_arr)
-  
-  if n_elements(delta_uv) eq 0 then delta_uv = 4.
-  if n_elements(uv_max) eq 0 then uv_max = 200.
-  uv_arr = findgen(uv_max*2./delta_uv + 1)*delta_uv-uv_max
-  n_uv = n_elements(uv_arr)
-  
-  title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
-  eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+
+  if keyword_set(use_sim) then begin
+    restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
+    eor_uvf_cube = temporary(model_uvf)
+    n_freq = n_elements(freq_arr)
+    n_uv = n_elements(uv_arr)
+    
+    delta_uv = uv_arr[1] - uv_arr[0]
+    uv_max = max(uv_arr)
+    title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
+    
+    
+    if keyword_set(apply_beam) then begin
+      ;      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', beam2_xx_image)
+      stop
+      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', beam2_xx_image)
+      
+      temp = shift(fft(fft(shift(eor_uvf_cube,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0)
+      stop
+      temp = temp * sqrt(beam2_image)
+      stop
+      undefine, beam2_image
+      temp = shift(fft(fft(shift(temp,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0)
+      stop
+      eor_uvf_cube = temp
+    endif
+    
+  endif else begin
+    freq_arr = findgen(384)*0.08+120
+    n_freq = n_elements(freq_arr)
+    
+    if n_elements(delta_uv) eq 0 then delta_uv = 4.
+    if n_elements(uv_max) eq 0 then uv_max = 200.
+    uv_arr = findgen(uv_max*2./delta_uv + 1)*delta_uv-uv_max
+    n_uv = n_elements(uv_arr)
+    
+    title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
+    eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+    
+    if keyword_set(apply_beam) then begin
+    
+      degpix = !radeg / uv_max
+      theta_vals = (findgen(n_uv)-n_uv/2) * degpix
+      sigma_beam = max(theta_vals)/(sqrt(2.*alog(2)))
+      gaussian_theta = exp(-1 * theta_vals^2./(2.*sigma_beam^2.))
+      gaussian_theta = gaussian_theta / max(gaussian_theta)
+      beam_tophat = fltarr(n_uv,n_uv,n_freq)+1.
+      beam = rebin(gaussian_theta, n_uv, n_uv, n_freq, /sample) * rebin(reform(gaussian_theta, 1, n_uv), n_uv, n_uv, n_freq, /sample)
+      
+      temp = shift(fft(fft(shift(eor_uvf_cube,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0)
+      temp = temp * beam
+      temp = shift(fft(fft(shift(temp,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0)
+      
+      eor_uvf_cube = temp
+    endif
+    
+  endelse
   
   if n_elements(f_avg) gt 0 then if f_avg gt 1 then begin
     nf_new = floor(n_freq / f_avg)
@@ -42,7 +89,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     undefine, temp
     
     title = title + ', uv avg: ' + number_formatter(uv_avg)
-
+    
     eor_uvf_cube = temporary(temp2)
     uv_arr = temporary(temp_uv)
     n_uv = nuv_new
@@ -112,7 +159,15 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
   for i=0, n_elements(hist)-1 do if hist[i] gt 1 then new_power2[i] = mean(abs(signal_mk_k[ri[ri[i]:ri[i+1]-1]])^2.)
   
   ;; adjust for window function
-  window_int = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
+  if keyword_set(apply_beam) then begin
+    xy_mpc_delta = (2.*!pi) / (n_uv * kx_mpc_delta)
+        
+    window_int = total(beam[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
+    window_int_tophat = total(beam_tophat[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
+    volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))    
+  endif else begin
+    window_int = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
+  endelse
   new_power2 = new_power2 / window_int
   print, 'window_int', window_int
   
