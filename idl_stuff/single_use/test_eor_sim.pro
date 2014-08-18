@@ -3,7 +3,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
 
   if keyword_set(use_sim) then begin
     restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
-    eor_uvf_cube = temporary(model_uvf)
+    eor_uvf_cube = temporary(model_uvf)*2.
     n_freq = n_elements(freq_arr)
     n_uv = n_elements(uv_arr)
     
@@ -13,7 +13,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     
     
     if keyword_set(apply_beam) then begin
-      ;      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', beam2_xx_image)
+      ;      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', 'beam2_xx_image')
       stop
       beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', beam2_xx_image)
       
