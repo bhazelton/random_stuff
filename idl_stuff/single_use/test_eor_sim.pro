@@ -1,6 +1,7 @@
-pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = uv_avg, apply_beam = apply_beam, use_sim = use_sim
-
-
+pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = uv_avg, spec_window_type = spec_window_type, $
+    apply_beam = apply_beam, use_sim = use_sim, flat_sigma = flat_sigma, save_cubefile = save_cubefile
+    
+    
   if keyword_set(use_sim) then begin
     restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
     eor_uvf_cube = temporary(model_uvf)*2.
@@ -37,7 +38,9 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     n_uv = n_elements(uv_arr)
     
     title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
-    eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr)
+    eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma)
+    
+    print, 'stddev of uvf_cube: ' + number_formatter(stddev(abs(eor_uvf_cube)), format='(e10.2)')
     
     if keyword_set(apply_beam) then begin
     
@@ -143,38 +146,117 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
   kz_mpc = findgen(round(kz_mpc_range / kz_mpc_delta)) * kz_mpc_delta - kz_mpc_range/2.
   if n_elements(kz_mpc) ne n_kz then stop
   
-  k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2. + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2. + $
-    rebin(reform(kz_mpc, 1, 1, n_kz), n_kx, n_ky, n_kz, /sample)^2.)
-    
+  
   signal_mk = eor_uvf_cube
   ;; convert from Jy -> mK Mpc^2
   for i=0, n_kz-1 do signal_mk[*,*,i] = signal_mk[*,*,i] * conv_factor[i]
+  
+  print, 'stddev of uvf_cube in mK: ' + number_formatter(stddev(abs(signal_mk)), format='(e10.2)')
+  
+  ;; apply spectral windowing function if desired
+  if n_elements(spec_window_type) ne 0 then begin
+    window = spectral_window(n_freq, type = spec_window_type, /periodic)
+    
+    norm_factor = sqrt(n_freq/total(window^2.))
+    
+    window = window * norm_factor
+    
+    window_expand = rebin(reform(window, 1, 1, n_freq), n_kx, n_ky, n_freq, /sample)
+    
+    signal_mk = signal_mk * window_expand
+  endif
   
   signal_mk_k = fft(temporary(signal_mk), dimension = 3) * z_mpc_delta * n_kz
   ;; shift
   signal_mk_k = shift(temporary(signal_mk_k), [0,0,n_kz/2])
   
+  print, 'stddev of k_cube in mK: ' + number_formatter(stddev(abs(signal_mk_k)), format='(e10.2)')
+  
+  k_arr_2d = sqrt(reform(rebin(kx_mpc, n_kx, n_ky, /sample)^2. + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, /sample)^2.,n_kx*n_ky))
+  hist_kpar = histogram(k_arr_2d, binsize = kx_mpc_delta, min = 0, locations = locs_kpar, reverse_indices=ri_kpar)
+  temp_power = fltarr(n_elements(hist_kpar), n_kz)
+  temp_signal = reform(signal_mk_k, n_kx*n_ky, n_freq)
+  for i=0, n_elements(hist_kpar)-1 do begin
+    if hist_kpar[i] eq 0 then continue
+    if hist_kpar[i] gt 1 then temp_power[i, *] = total(abs(temp_signal[ri_kpar[ri_kpar[i]:ri_kpar[i+1]-1], *])^2.,1)/hist_kpar[i] $
+    else temp_power[i, *] = abs(temp_signal[ri_kpar[ri_kpar[i]:ri_kpar[i+1]-1], *])^2.
+  endfor
+  undefine, temp_signal
+  kz_bin = abs(round(kz_mpc / kz_mpc_delta))
+  hist_kz = histogram(kz_bin, binsize = 1, min=0, locations = locs_kz, reverse_indices=ri_kz)
+  locs_kz = locs_kz*kz_mpc_delta
+  power_2d = fltarr(n_elements(hist_kpar), n_elements(hist_kz))
+  for i=0, n_elements(hist_kz)-1 do begin
+    if hist_kz[i] eq 0 then continue
+    if hist_kz[i] gt 1 then power_2d[*,i] = total(temp_power[*, ri_kz[ri_kz[i]:ri_kz[i+1]-1]],2)/hist_kz[i] else power_2d[*,i] = temp_power[*, ri_kz[ri_kz[i]:ri_kz[i+1]-1]]
+  endfor
+  
+  undefine, temp_power
+  
+  k_arr = sqrt(rebin(kx_mpc, n_kx, n_ky, n_kz, /sample)^2. + rebin(reform(ky_mpc, 1, n_ky), n_kx, n_ky, n_kz, /sample)^2. + $
+    rebin(reform(kz_mpc, 1, 1, n_kz), n_kx, n_ky, n_kz, /sample)^2.)
+    
   hist = histogram(alog10(k_arr), binsize = log_binsize, min = min(alog10(k_centers))-log_binsize/2., locations = locs, reverse_indices=ri)
   new_power2 = fltarr(n_elements(hist))
   for i=0, n_elements(hist)-1 do if hist[i] gt 1 then new_power2[i] = mean(abs(signal_mk_k[ri[ri[i]:ri[i+1]-1]])^2.)
   
+  print, 'mean of power in mK (before window divided out): ' + number_formatter(mean(new_power2), format='(e10.2)')
+  
   ;; adjust for window function
   if keyword_set(apply_beam) then begin
     xy_mpc_delta = (2.*!pi) / (n_uv * kx_mpc_delta)
-        
+    
     window_int = total(beam[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
     window_int_tophat = total(beam_tophat[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
-    volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))    
+    volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
   endif else begin
     window_int = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
   endelse
   new_power2 = new_power2 / window_int
   print, 'window_int', window_int
   
+  print, 'mean of power in mK (final): ' + number_formatter(mean(new_power2), format='(e10.2)')
+  
+  if windowavailable(1) then wset, 1 else window, 1
+  
   cgplot, k_centers, power, psym=4, /ylog, /xlog, title = title
   cgplot, 10.^(locs+log_binsize/2.), new_power2, psym=6, /over, color='red'
+  if keyword_set(flat_sigma) then cgplot, k_centers, (power*0d + max(power)), psym=4, /over, color='blue'
   
-  
+  kpower_2d_plots, power_savefile, power = power_2d, kperp_edges = [locs_kpar-kx_mpc_delta/2., max(locs_kpar) + kx_mpc_delta/2.], $
+    kpar_edges = [locs_kz-kz_mpc_delta/2., max(locs_kz) + kz_mpc_delta/2.], window_num=2
+    
   ratio2 = new_power2/power
+  
+  if n_elements(save_cubefile) ne 0 then begin
+  
+    model_uv_arr = temporary(eor_uvf_cube)/2. ;; divide by 2 to get to xx polarization
+    weights_uv_arr = fltarr(n_kx, n_ky, n_kz) +1.
+    variance_uv_arr = weights_uv_arr
+    beam2_image = weights_uv_arr
+    
+    if keyword_set(apply_beam) then begin
+      temp = shift(fft(fft(shift(weights_uv_arr,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0)
+      temp = temp * beam
+      temp = shift(fft(fft(shift(temp,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0)
+      weights_uv_arr = temp
+      
+      temp = shift(fft(fft(shift(variance_uv_arr,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0)
+      temp = temp * beam^2.
+      temp = shift(fft(fft(shift(temp,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0)
+      variance_uv_arr = temp
+      
+      beam2_image = beam^2.
+    endif
+    
+    vis_noise = ptr_new(fltarr(1, n_freq) + 1.)
+    obs = {max_baseline:uv_max, obsra:0, obsdec:0, zenra:0, zendec:0, n_freq:n_freq, degpix:(180./!pi)/(n_kx*delta_uv), $
+      kpix:delta_uv, dimension:n_uv, elements:n_uv, freq:freq_arr*1e6, time_res:2, $
+      n_vis:(128*127/2.)*60.*n_freq, nf_vis:fltarr(n_freq)+(128*127/2.)*60., vis_noise:vis_noise}
+      
+    for i=0, n_elements(save_cubefile)-1 do begin
+      save, file=save_cubefile[i], weights_uv_arr, model_uv_arr, variance_uv_arr, beam2_image, obs
+    endfor
+  endif
   
 end
