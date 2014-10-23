@@ -1,10 +1,15 @@
-pro test_ps_suite, recalculate_all = recalculate_all, uv_max=uv_max
+pro test_ps_suite, recalculate_all = recalculate_all, uv_max=uv_max, png = png, beam_inds = beam_inds, sample_inds = sample_inds
 
   beam_size_factors = [1,3,5,10]
   sample_factors = [.01,.1,.25,.5,1,2]
   
+  if n_elements(beam_inds) gt 0 then beam_size_factors = beam_size_factors[beam_inds]
+  if n_elements(sample_inds) gt 0 then sample_factors = sample_factors[sample_inds]
+  
   sim_powers = fltarr(n_elements(beam_size_factors), n_elements(sample_factors))
   if n_elements(uv_max) eq 0 then uv_max=100
+  
+  if keyword_set(png) then no_plots=1
   
   t0 = systime(1)
   for i=0, n_elements(beam_size_factors)-1 do begin
@@ -14,7 +19,7 @@ pro test_ps_suite, recalculate_all = recalculate_all, uv_max=uv_max
         
         
         test_eor_sim, /flat_sigma, /apply_beam, sample_factor=sample_factors[j], beam_size_factor=beam_size_factors[i], $
-          uv_max=uv_max, /save_cubefile, /no_plots, /calc_al_weights, sim_power = temp
+          uv_max=uv_max, /save_cubefile, no_plots=no_plots, /calc_al_weights, sim_power = temp
           
         sim_powers[i,j] = temp
         
@@ -22,7 +27,8 @@ pro test_ps_suite, recalculate_all = recalculate_all, uv_max=uv_max
         print, 'calculating ps for ' + folder_name
       endif
       
-      hellebore_wrapper, folder_name,/sim, /no_spec_window,/png, refresh_beam=recalculate_all, refresh_info=recalculate_all
+      hellebore_wrapper, folder_name,/sim, /no_spec_window, png = png, refresh_beam=recalculate_all, refresh_info=recalculate_all
+      
     endfor
   endfor
   t1=systime(1)

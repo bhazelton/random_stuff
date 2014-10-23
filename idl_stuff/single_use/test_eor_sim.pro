@@ -172,7 +172,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
         
         if keyword_set(calc_al_weights) then begin
           hmf2 = temporary(abs(hmf)^2.)
-          al_weights = sqrt(reform(total(hmf2,1), n_uv, n_uv, n_freq))
+          al_weights = sqrt(reform(total(hmf2,1)*delta_uv^2., n_uv, n_uv, n_freq))
           undefine, hmf2
         endif
         
@@ -352,7 +352,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
   if keyword_set(apply_beam) then begin
     xy_mpc_delta = (2.*!pi) / (n_uv * kx_mpc_delta)
     
-    window_int = total(beam[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
+    window_int = total(abs(beam[*,*,0])^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
     window_int_tophat = total(beam_tophat[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
     volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
   endif else begin
@@ -364,12 +364,17 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
   print, 'mean of power in mK (final): ' + number_formatter(mean(new_power2), format='(e10.2)')
   
   if not keyword_set(no_plots) then begin
-    if windowavailable(1) then wset, 1 else window, 1
+    if windowavailable(1) then begin
+      wset, 1
+      if !d.y_size/!d.x_size gt 2 or !d.x_size/!d.y_size gt 2 then make_win = 1 else make_win = 0
+    endif else make_win = 1
+    if make_win eq 1 then window, 1
     
-    yrange = minmax([power, new_power2])
-    cgplot, k_centers, power, psym=4, /ylog, /xlog, title = title, yrange = yrange
+    if keyword_set(flat_sigma) then yrange = minmax([max(power), new_power2[where(new_power2 gt 0)], 1e5, 1e7]) else yrange = minmax([power, new_power2[where(new_power2 gt 0)]])
+    
+    cgplot, k_centers, power, psym=-3, /ylog, /xlog, title = title, yrange = yrange
     cgplot, 10.^(locs+log_binsize/2.), new_power2, psym=6, /over, color='red'
-    if keyword_set(flat_sigma) then cgplot, k_centers, (power*0d + max(power)), psym=4, /over, color='blue'
+    if keyword_set(flat_sigma) then cgplot, k_centers, (power*0d + max(power)), psym=-3, /over, color='blue'
     
     kpower_2d_plots, power_savefile, power = power_2d, kperp_edges = [locs_kpar-kx_mpc_delta/2., max(locs_kpar) + kx_mpc_delta/2.], $
       kpar_edges = [locs_kz-kz_mpc_delta/2., max(locs_kz) + kz_mpc_delta/2.], window_num=2
@@ -414,7 +419,9 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
       n_vis:(128*127/2.)*60.*n_freq, nf_vis:fltarr(n_freq)+(128*127/2.)*60., vis_noise:vis_noise}
       
     for i=0, n_elements(save_cubefile)-1 do begin
-      if keyword_set(calc_al_weights) then if i ge 2 then weights_uv_arr = al_weights
+      if keyword_set(calc_al_weights) then if i ge 2 then begin
+        weights_uv_arr = al_weights
+      endif
       
       save, file=save_cubefile[i], weights_uv_arr, model_uv_arr, variance_uv_arr, beam2_image, obs
     endfor
