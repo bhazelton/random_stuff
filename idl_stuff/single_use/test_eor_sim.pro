@@ -1,19 +1,32 @@
-pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = uv_avg, spec_window_type = spec_window_type, $
-    flat_sigma = flat_sigma, no_distrib = no_distrib, use_sim = use_sim, apply_beam = apply_beam, $
+pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, n_freq = n_freq, f_avg = f_avg, uv_avg = uv_avg, spec_window_type = spec_window_type, $
+    flat_sigma = flat_sigma, no_distrib = no_distrib, use_sim = use_sim, apply_beam = apply_beam, sim_beam = sim_beam, $
     sample_factor = sample_factor, uniform_sampling = uniform_sampling, beam_size_factor = beam_size_factor, calc_al_weights = calc_al_weights, $
-    save_cubefile = save_cubefile, no_plots = no_plots, sim_power=sim_power
+    save_cubefile = save_cubefile, no_plots = no_plots, sim_power=sim_power, ver_name = ver_name, al_norm2 = al_norm2
     
     
-  if keyword_set(apply_beam) and n_elements(beam_size_factor) eq 0 then beam_size_factor=10.
+  if keyword_set(apply_beam) then begin
+    if n_elements(sim_beam) eq 0 then $
+      if n_elements(beam_size_factor) eq 0 then beam_size_factor=10. $
+    else print, 'beam_size_factor has no effect if sim_beam is set. Ignoring.'
+  endif
   
   if n_elements(save_cubefile) gt 0 and size(save_cubefile,/type) ne 7 then begin
     save_path = base_path('data') +'fhd_sim_data/snap_highf_noinst_'
+    if n_elements(ver_name) gt 0 then save_path = save_path + ver_name + '_'
+    if keyword_set(al_norm2) then save_path = save_path + 'norm2_'
     if keyword_set(flat_sigma) then begin
       if keyword_set(no_distrib) then save_path = save_path + 'delta_image_' $
       else save_path = save_path + 'flat_'
-    endif else save_cubefile = save_cubefile + 'eor_nomu_'
+    endif else save_path = save_path + 'eor_nomu_'
     
-    if keyword_set(apply_beam) then save_path = save_path + 'beam' + number_formatter(beam_size_factor) + '_'
+    if keyword_set(apply_beam) then begin
+      if n_elements(sim_beam) gt 0 then begin
+        save_path = save_path + 'beaminst'
+        if sim_beam gt 1 then save_path = save_path + number_formatter(sim_beam)
+        save_path = save_path + '_'
+      endif else save_path = save_path + 'beam' + number_formatter(beam_size_factor) + '_'
+    endif
+    
     if keyword_set(uniform_sampling) then save_path = save_path + 'sampleuniform_' $
     else if n_elements(sample_factor) gt 0 then save_path = save_path + 'samplefactor' + number_formatter(sample_factor) + '_'
     
@@ -24,7 +37,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
   endif
   
   if keyword_set(use_sim) then begin
-    restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
+    restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_beamfix/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
     eor_uvf_cube = temporary(model_uvf)*2.
     n_freq = n_elements(freq_arr)
     n_uv = n_elements(uv_arr)
@@ -37,7 +50,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     if keyword_set(apply_beam) then begin
       ;      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', 'beam2_xx_image')
     
-      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', beam2_xx_image)
+      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_beamfix/1061316176_initial_beam2_image.sav', beam2_xx_image)
       beam=sqrt(beam2_image)
       
       temp = shift(fft(fft(shift(eor_uvf_cube,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0)
@@ -48,15 +61,78 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     endif
     
   endif else begin
-    freq_arr = findgen(384)*0.08+120
-    n_freq = n_elements(freq_arr)
+    if keyword_set(apply_beam) and n_elements(sim_beam) gt 0 then begin
     
-    if n_elements(delta_uv) eq 0 then delta_uv = 4.
-    if n_elements(uv_max) eq 0 then uv_max = 200.
-    uv_arr = findgen(uv_max*2./delta_uv)*delta_uv-uv_max
-    n_uv = n_elements(uv_arr)
+      case sim_beam of
+        1: beam_path = base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_beamfix_uvin/1061316176_gridded_beam2_image.sav'
+        2: beam_path = base_path('data') +'fhd_sim_data/offzen_high_flat_uvin/1061323008_gridded_beam2_image.sav'
+        else: stop
+      endcase
+      obs = getvar_savefile(beam_path, 'obs_out')
+      
+      beam_uv_pix = obs.kpix
+      if n_elements(delta_uv) eq 0 then delta_uv = beam_uv_pix
+      
+      if n_elements(uv_max) eq 0 then uv_max = 200.
+      uv_arr = findgen(uv_max*2./delta_uv)*delta_uv-uv_max
+      n_uv = n_elements(uv_arr)
+      
+      delta_theta = 1./(n_uv * delta_uv)
+      
+      n_uv_beam = obs.elements
+      delta_theta_beam = 1./(n_uv_beam * beam_uv_pix)
+      
+      n_freq = obs.n_freq
+      freq_arr = (*obs.BASELINE_INFO).freq/1e6
+      
+      nf_vis = obs.nf_vis
+      wh_no_vis = where(nf_vis eq 0, count_no_vis)
+      
+      beam2_image = getvar_savefile(beam_path, 'beam2_xx_image')
+      beam2_image = beam2_image / rebin(reform(nf_vis, 1, 1, n_freq), n_uv_beam, n_uv_beam, n_freq, /sample)
+      if count_no_vis gt 0 then beam2_image[*,*, wh_no_vis] = 0
+      beam=sqrt(beam2_image)
+      
+      beam_total_freq = total(total(beam, 2), 1)
+      wh_beam0 = where(beam_total_freq eq 0, count_beam0, complement = wh_beam_n0, ncomplement = count_beam_n0)
+      if count_beam0 gt 0 then begin
+        if count_beam_n0 eq 0 then message, 'beam cube is entirely 0'
+        
+        temp = abs(rebin(wh_beam_n0, count_beam_n0, count_beam0, /sample) - rebin(reform(wh_beam0, 1, count_beam0), count_beam_n0, count_beam0, /sample))
+        temp2 = min(temp, min_locs, dimension=1)
+        beam_inds_sub = wh_beam_n0[min_locs mod count_beam_n0]
+        
+        beam[*,*,wh_beam0] = beam[*,*,beam_inds_sub]
+        
+      endif
+      
+      if delta_uv ne beam_uv_pix then begin
+        if delta_uv gt beam_uv_pix then begin
+          ;; clip image beam to get correct delta_uv
+          img_extent = 1./delta_uv
+          n_img = img_extent/delta_theta_beam
+          
+          beam = beam[n_uv_beam/2 - n_img/2:n_uv_beam/2+n_img/2-1, n_uv_beam/2 - n_img/2:n_uv_beam/2+n_img/2-1, *]
+          n_uv_beam = n_img
+        endif else stop
+        
+        
+      endif
+      
+      
+      undefine_fhd, obs
+    endif else begin
     
-    delta_theta = 1./(n_uv * delta_uv)
+      if n_elements(n_freq) eq 0 then n_freq = 384
+      freq_arr = findgen(n_freq)*0.08+120
+      
+      if n_elements(delta_uv) eq 0 then delta_uv = 4.
+      if n_elements(uv_max) eq 0 then uv_max = 200.
+      uv_arr = findgen(uv_max*2./delta_uv)*delta_uv-uv_max
+      n_uv = n_elements(uv_arr)
+      
+      delta_theta = 1./(n_uv * delta_uv)
+    endelse
     
     title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
     eor_uvf_cube = eor_sim(uv_arr, uv_arr, freq_arr, flat_sigma = flat_sigma, no_distrib = no_distrib)
@@ -65,29 +141,42 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     
     if keyword_set(apply_beam) then begin
     
-      theta_vals1d = (findgen(n_uv)-n_uv/2) * delta_theta
-      theta_vals2d = sqrt(rebin(theta_vals1d, n_uv, n_uv, /sample)^2. + rebin(reform(theta_vals1d, 1, n_uv), n_uv, n_uv, /sample)^2.)
-      sigma_beam = (delta_theta*n_uv/2.)/beam_size_factor
-      gaussian_theta = exp(-1 * theta_vals2d^2./(2.*sigma_beam^2.))
-      gaussian_theta = gaussian_theta / max(gaussian_theta)
-      beam_tophat = fltarr(n_uv,n_uv,n_freq)+1.
-      beam = rebin(gaussian_theta, n_uv, n_uv, n_freq, /sample)
+      if n_elements(sim_beam) gt 0 then begin
+        beam_uv = shift(fft(fft(shift(beam,n_uv_beam/2,n_uv_beam/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv_beam/2,n_uv_beam/2,0) * delta_theta_beam^2.
+        
+        wh_small = where(beam_uv lt max(beam_uv)*0.01, count_small)
+        if count_small gt 0 then beam_uv[wh_small] = 0. else stop
+        
+        beam_uv = beam_uv[n_uv_beam/2-n_uv/2:n_uv_beam/2+n_uv/2-1, n_uv_beam/2-n_uv/2:n_uv_beam/2+n_uv/2-1,*]
+        beam = shift(fft(fft(shift(beam_uv,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0) * n_uv^2. * delta_uv^2.
+        
+      endif else begin
+        theta_vals1d = (findgen(n_uv)-n_uv/2) * delta_theta
+        theta_vals2d = sqrt(rebin(theta_vals1d, n_uv, n_uv, /sample)^2. + rebin(reform(theta_vals1d, 1, n_uv), n_uv, n_uv, /sample)^2.)
+        sigma_beam = (delta_theta*n_uv/2.)/beam_size_factor
+        gaussian_theta = exp(-1 * theta_vals2d^2./(2.*sigma_beam^2.))
+        gaussian_theta = gaussian_theta / max(gaussian_theta)
+        beam_tophat = fltarr(n_uv,n_uv,n_freq)+1.
+        beam = rebin(gaussian_theta, n_uv, n_uv, n_freq, /sample)
+        
+        beam_uv = shift(fft(fft(shift(beam,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0) * delta_theta^2.
+        uv_dist = sqrt(rebin(uv_arr, n_uv, n_uv,/sample)^2. + rebin(reform(uv_arr, 1, n_uv), n_uv, n_uv, /sample)^2.)
+        hist = histogram(uv_dist, binsize = delta_uv, locations = locs, reverse_indices=ri)
+        min_per_dist = fltarr(n_elements(hist))
+        beam_0 = beam_uv[*,*,0]
+        for i=0, n_elements(hist)-1 do min_per_dist[i] = min(beam_0[ri[ri[i]:ri[i+1]-1]])
+        
+        wh_small = where(min_per_dist lt 1e-6, count_small)
+        if count_small gt 0 then begin
+          beam_uv = reform(beam_uv, n_uv^2., n_freq)
+          for i=0, count_small-1 do beam_uv[ri[ri[wh_small[i]]:ri[wh_small[i]+1]-1],*]=0.
+          beam_uv = reform(beam_uv, n_uv, n_uv, n_freq)
+          beam = shift(fft(fft(shift(beam_uv,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0) * n_uv^2. * delta_uv^2.
+        endif
+      endelse
+      
       model_image = shift(fft(fft(shift(eor_uvf_cube,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0) * n_uv^2. * delta_uv^2.
       
-      beam_uv = shift(fft(fft(shift(beam,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0) * delta_theta^2.
-      uv_dist = sqrt(rebin(uv_arr, n_uv, n_uv,/sample)^2. + rebin(reform(uv_arr, 1, n_uv), n_uv, n_uv, /sample)^2.)
-      hist = histogram(uv_dist, binsize = delta_uv, locations = locs, reverse_indices=ri)
-      min_per_dist = fltarr(n_elements(hist))
-      beam_0 = beam_uv[*,*,0]
-      for i=0, n_elements(hist)-1 do min_per_dist[i] = min(beam_0[ri[ri[i]:ri[i+1]-1]])
-      
-      wh_small = where(min_per_dist lt 1e-6, count_small)
-      if count_small gt 0 then begin
-        beam_uv = reform(beam_uv, n_uv^2., n_freq)
-        for i=0, count_small-1 do beam_uv[ri[ri[wh_small[i]]:ri[wh_small[i]+1]-1],*]=0.
-        beam_uv = reform(beam_uv, n_uv, n_uv, n_freq)
-        beam = shift(fft(fft(shift(beam_uv,n_uv/2,n_uv/2,0), dimension=1),dimension=2),n_uv/2,n_uv/2,0) * n_uv^2. * delta_uv^2.
-      endif
       print, 'beam fraction 1 pixel away: ', abs(beam_uv[n_uv/2,n_uv/2-1,0])/abs(beam_uv[n_uv/2,n_uv/2,0])
       
       model_image = model_image * beam
@@ -101,9 +190,9 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
           upix_samples = rebin(indgen(n_uv), n_uv, n_uv, /sample)
           vpix_samples = rebin(reform(indgen(n_uv), 1, n_uv), n_uv, n_uv, /sample)
         endif else begin
-          nsample = round(float(n_uv^2.) * sample_factor)
-          upix_samples = round(randomu(seed, nsample)*(n_uv-1))
-          vpix_samples = round(randomu(seed, nsample)*(n_uv-1))
+          nsample = round(float(n_uv^2.) * sample_factor, /L64)
+          upix_samples = round(randomu(seed, nsample)*(n_uv-1), /L64)
+          vpix_samples = round(randomu(seed, nsample)*(n_uv-1), /L64)
         endelse
         
         if not keyword_set(no_plots) then quick_image, eor_uvf_cube[*,*,1], window=4, title = 'uv model'
@@ -114,10 +203,26 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
         if not keyword_set(no_plots) then quick_image, convolved_model[*,*,1], window=5, title = 'uv convolved model', data_range = data_range_convol
         convolved_model_power = total(abs(convolved_model[*,*,1])^2.) / (n_uv^2.)
         
-        u_kernel_range = minmax(where(total(beam_uv[*,*,0], 2) gt 0))
-        v_kernel_range = minmax(where(total(beam_uv[*,*,0], 1) gt 0))
-        beam_kernel = beam_uv[u_kernel_range[0]:u_kernel_range[1],v_kernel_range[0]:v_kernel_range[1],*]
-        n_uv_kernel = n_elements(beam_kernel[*,0,0])
+        u_kernel_range = minmax(where(total(total(beam_uv, 3),2) gt 0))
+        v_kernel_range = minmax(where(total(total(beam_uv, 3),1) gt 0))
+        if (u_kernel_range[1]-u_kernel_range[0]+1) ne (v_kernel_range[1]-v_kernel_range[0]+1) then begin
+          n_uv_kernel = max([(u_kernel_range[1]-u_kernel_range[0]+1), (v_kernel_range[1]-v_kernel_range[0]+1)], max_loc)
+          n_diff = abs((u_kernel_range[1]-u_kernel_range[0]+1) - (v_kernel_range[1]-v_kernel_range[0]+1))
+          case max_loc of
+            0: begin
+              v_kernel_range = v_kernel_range + [-1,1]*n_diff/2
+              if (u_kernel_range[1]-u_kernel_range[0]+1) ne (v_kernel_range[1]-v_kernel_range[0]+1) then stop
+            end
+            1: begin
+              u_kernel_range = u_kernel_range + [-1,1]*n_diff/2
+              if (u_kernel_range[1]-u_kernel_range[0]+1) ne (v_kernel_range[1]-v_kernel_range[0]+1) then stop
+            end
+          endcase
+          beam_kernel = beam_uv[u_kernel_range[0]:u_kernel_range[1],v_kernel_range[0]:v_kernel_range[1],*]
+        endif else begin
+          beam_kernel = beam_uv[u_kernel_range[0]:u_kernel_range[1],v_kernel_range[0]:v_kernel_range[1],*]
+          n_uv_kernel = n_elements(beam_kernel[*,0,0])
+        endelse
         
         print, 'uv kernel width (pixels): ', n_uv_kernel
         
@@ -126,7 +231,8 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
         variance_uv_arr=reform(abs(model_uv)*0., n_uv^2, n_freq)
         if keyword_set(calc_al_weights) then hmf = complex(fltarr(n_uv^2, n_uv^2, n_freq))
         beam_kernel = reform(beam_kernel, n_uv_kernel^2, n_freq)
-        for i=0, nsample-1 do begin
+        
+        for i=0L, nsample-1 do begin
           u_ind_range = upix_samples[i] - n_uv_kernel/2 + [0, n_uv_kernel-1]
           v_ind_range = vpix_samples[i] - n_uv_kernel/2 + [0, n_uv_kernel-1]
           
@@ -172,7 +278,8 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
         
         if keyword_set(calc_al_weights) then begin
           hmf2 = temporary(abs(hmf)^2.)
-          al_weights = sqrt(reform(total(hmf2,1)*delta_uv^2., n_uv, n_uv, n_freq))
+          if keyword_set(al_norm2) then al_weights = sqrt(reform(total(hmf2,1), n_uv, n_uv, n_freq))*delta_uv^2. $
+          else al_weights = sqrt(reform(total(hmf2,1)*delta_uv^2., n_uv, n_uv, n_freq))
           undefine, hmf2
         endif
         
@@ -353,7 +460,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, f_avg = f_avg, uv_avg = 
     xy_mpc_delta = (2.*!pi) / (n_uv * kx_mpc_delta)
     
     window_int = total(abs(beam[*,*,0])^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
-    window_int_tophat = total(beam_tophat[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
+    
     volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
   endif else begin
     window_int = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
