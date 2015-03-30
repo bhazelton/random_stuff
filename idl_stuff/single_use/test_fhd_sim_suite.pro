@@ -1,4 +1,5 @@
-pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, recalculate_ps = recalculate_ps, $
+pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, $
+    refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
     no_ps_plots = no_ps_plots
     
   sample_factors = [.0001,.001,.01]
@@ -46,10 +47,13 @@ pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, recalcul
   
   if n_elements(sample_inds) gt 0 then sample_factors = sample_factors[sample_inds]
   
+  nbeams=1
+  
   sim_powers = fltarr(nbeams, n_elements(sample_factors))
   sim_ave_powers = fltarr(nbeams, n_elements(sample_factors))
   sim_wt_ave_powers = fltarr(nbeams, n_elements(sample_factors))
   sim_ave_weights = fltarr(nbeams, n_elements(sample_factors))
+  sim_nbsl_lambda2 = fltarr(nbeams, n_elements(sample_factors))
   
   if keyword_set(pub) then no_plots=1
   if keyword_set(no_ps_plots) then begin
@@ -57,34 +61,37 @@ pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, recalcul
     plot_stdset = 0
   endif
   
-  plotfile = base_path('plots') + 'power_spectrum/fhd_sim/power_ratio_vs_weight_'
+  ;plotfile = base_path('plots') + 'power_spectrum/fhd_sim/power_ratio_vs_weight_'
   
-  plotfile_freq = base_path('plots') + 'power_spectrum/fhd_sim/power_per_freq_vs_weight_'
+  ;plotfile_freq = base_path('plots') + 'power_spectrum/fhd_sim/power_per_freq_vs_weight_'
   
   t0 = systime(1)
   
   nbeams=1
+  sim_beam = [1]
   for i=0, nbeams-1 do begin
     for j=0, n_elements(sample_factors)-1 do begin
     
-      print, 'calculating ps for ' + folder_name
-      hellebore_wrapper, folder_names[i],/sim, /no_spec_window, png = png, $
-        refresh_ps=recalculate_ps, refresh_beam=recalculate_ps, refresh_info=recalculate_ps, $
+      print, 'calculating ps for ' + folder_names[j]
+      enterprise_wrapper, folder_names[j],/sim, png = png, $
+        refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
         cube_power_info = cube_power_info, plot_stdset = plot_stdset, uvf_input = uvf_input
         
       sim_ave_powers[i,j] = cube_power_info.ave_power[1]
       sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[1]
       sim_ave_weights[i,j] = cube_power_info.ave_weights[1]
-      
+      sim_nbsl_lambda2[i,j] = cube_power_info.nbsl_lambda2[1]
       if i eq 0 and j eq 0 then begin
         dims = size(cube_power_info.ave_power_freq, /dimension)
         sim_ave_power_freq = fltarr(nbeams, n_elements(sample_factors), dims[1])
         sim_wt_ave_power_freq = fltarr(nbeams, n_elements(sample_factors), dims[1])
         sim_ave_weights_freq = fltarr(nbeams, n_elements(sample_factors), dims[1])
+        sim_nbsl_lambda2_freq = fltarr(nbeams, n_elements(sample_factors), dims[1])
       endif
       sim_ave_power_freq[i,j,*] = cube_power_info.ave_power_freq[1,*]
       sim_wt_ave_power_freq[i,j,*] = cube_power_info.wt_ave_power_freq[1,*]
       sim_ave_weights_freq[i,j,*] = cube_power_info.ave_weights_freq[1,*]
+      sim_nbsl_lambda2_freq[i,j,*] = cube_power_info.nbsl_lambda2[1,*]
       
       if i+j eq 0 then flat_power = cube_power_info.flat_power else if flat_power ne cube_power_info.flat_power then print, 'flat powers do not agree'
       
@@ -99,8 +106,16 @@ pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, recalcul
   
   if keyword_set(recalculate_all) then print, sim_powers
   
-  yrange=[0,1]
-  xrange=[-1,9]
+  yrange=minmax([sim_ave_powers/flat_power, sim_wt_ave_powers/flat_power])
+  xrange=minmax(sim_ave_weights)
+  
+  if keyword_set(uvf_input) then begin
+    yrange = [0,.05]
+    xrange= [0,.01]
+  endif else begin
+    yrange = [0,9]
+    xrange= [0,3e-4]
+  endelse
   
   colors1 = ['cyan', 'light salmon', 'light sea green', 'peru']
   colors2 = ['blue', 'red', 'sea green', 'chocolate']
@@ -124,11 +139,15 @@ pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, recalcul
     
   endif else if windowavailable(window_num) then wset, window_num else window, window_num
   
+  ;  cgplot, sim_ave_weights[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='ave weight (1/lamda^2)', ytitle = 'power ratio', xrange=xrange, $
+  ;    thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, charsize = charsize, font = font
+  ;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_ave_powers[i,*]/flat_power, color=colors1[i], psym=-4, /over, thick = thick
+  ;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_wt_ave_powers[i,*]/flat_power, color=colors2[i], /over, psym=-4, thick = thick
   
-  cgplot, sim_ave_weights[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='ave weight', ytitle = 'power ratio', xrange=xrange, $
+  cgplot, sim_nbsl_lambda2[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='baselines/lamda^2', ytitle = 'power ratio', $
     thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, charsize = charsize, font = font
-  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_ave_powers[i,*]/flat_power, color=colors1[i], psym=-4, /over, thick = thick
-  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_wt_ave_powers[i,*]/flat_power, color=colors2[i], /over, psym=-4, thick = thick
+  for i=0, nbeams-1 do cgplot, sim_nbsl_lambda2[i,*], sim_ave_powers[i,*]/flat_power, color=colors1[i], psym=-4, /over, thick = thick
+  for i=0, nbeams-1 do cgplot, sim_nbsl_lambda2[i,*], sim_wt_ave_powers[i,*]/flat_power, color=colors2[i], /over, psym=-4, thick = thick
   
   beam_str = strarr(nbeams)
   for i=0, nbeams-1 do begin
