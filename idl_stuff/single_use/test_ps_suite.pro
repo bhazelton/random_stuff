@@ -137,7 +137,10 @@ pro test_ps_suite, recalculate_all = recalculate_all, recalculate_ps = recalcula
         sim_ave_powers[i,j] = cube_power_info.ave_power[0]
         sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[0]
         sim_ave_weights[i,j] = cube_power_info.ave_weights[0]
-        sim_nbsl_lambda2[i,j] = cube_power_info.nbsl_lambda2[1]
+
+        n_uv = uv_max*2./sqrt(cube_power_info.uv_pix_area[0])
+        nsample = round(float(n_uv^2.) * sample_factors[j], /L64)        
+        sim_nbsl_lambda2[i,j] = nsample/cube_power_info.uv_area[0]
         
         if i eq 0 and j eq 0 then begin
           dims = size(cube_power_info.ave_power_freq, /dimension)
@@ -149,7 +152,7 @@ pro test_ps_suite, recalculate_all = recalculate_all, recalculate_ps = recalcula
         sim_ave_power_freq[i,j,*] = cube_power_info.ave_power_freq[0,*]
         sim_wt_ave_power_freq[i,j,*] = cube_power_info.wt_ave_power_freq[0,*]
         sim_ave_weights_freq[i,j,*] = cube_power_info.ave_weights_freq[0,*]
-        sim_nbsl_lambda2_freq[i,j,*] = cube_power_info.nbsl_lambda2[1,*]
+        sim_nbsl_lambda2_freq[i,j,*] = nsample/cube_power_info.uv_area[0]
       endif else begin
         sim_ave_powers[i,j] = cube_power_info.ave_power[1]
         sim_wt_ave_powers[i,j] = cube_power_info.wt_ave_power[1]
@@ -204,10 +207,10 @@ pro test_ps_suite, recalculate_all = recalculate_all, recalculate_ps = recalcula
   endif else if windowavailable(window_num) then wset, window_num else window, window_num
   
   
-;  cgplot, sim_ave_weights[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='ave weight', ytitle = 'power ratio', xrange=xrange, $
-;    thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, charsize = charsize, font = font
-;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_ave_powers[i,*]/flat_power, color=colors1[i], psym=-4, /over, thick = thick
-;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_wt_ave_powers[i,*]/flat_power, color=colors2[i], /over, psym=-4, thick = thick
+  ;  cgplot, sim_ave_weights[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='ave weight', ytitle = 'power ratio', xrange=xrange, $
+  ;    thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, charsize = charsize, font = font
+  ;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_ave_powers[i,*]/flat_power, color=colors1[i], psym=-4, /over, thick = thick
+  ;  for i=0, nbeams-1 do cgplot, sim_ave_weights[i,*], sim_wt_ave_powers[i,*]/flat_power, color=colors2[i], /over, psym=-4, thick = thick
   
   cgplot, sim_nbsl_lambda2[0,*], sim_ave_powers[0,*]*0+0.52, color='black', yrange = yrange, xtitle='baselines/lamda^2', ytitle = 'power ratio', $
     thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, charsize = charsize, font = font

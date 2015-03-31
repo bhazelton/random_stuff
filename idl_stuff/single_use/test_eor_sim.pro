@@ -523,7 +523,7 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, n_freq = n_freq, f_avg =
     vis_noise = ptr_new(fltarr(1, n_freq) + 1.)
     obs = {max_baseline:uv_max, obsra:0, obsdec:0, zenra:0, zendec:0, n_freq:n_freq, degpix:(180./!pi)*delta_theta, $
       kpix:delta_uv, dimension:n_uv, elements:n_uv, freq:freq_arr*1e6, time_res:2, $
-      n_vis:(128*127/2.)*60.*n_freq, nf_vis:fltarr(n_freq)+(128*127/2.)*60., vis_noise:vis_noise}
+      n_vis:n_sample*n_freq, nf_vis:fltarr(n_freq)+nsample, vis_noise:vis_noise}
       
     for i=0, n_elements(save_cubefile)-1 do begin
       if keyword_set(calc_al_weights) then if i ge 2 then begin
