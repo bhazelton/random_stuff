@@ -1,12 +1,16 @@
 pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, $
-    refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
+    recalc_sim = recalc_sim, refresh_ps = refresh_ps, refresh_binning = refresh_binning, $
     no_ps_plots = no_ps_plots
     
-  sample_factors = [.0001,.001,.01]
+  ;sample_factors = [.0001,.0002,.0005,.001,.005,.01,.05,.1,.5, 1]
+  sample_factors = [.0001,.0005,.001,.005,.01,.05,.1,.5, 1, 5]
   
   if n_elements(flat_sigma) eq 0 then flat_sigma = 1
   if keyword_set(flat_sigma) then sim_in = 'flat' else sim_in = 'eor'
-  folder_names = 'fhd_bjh_arrsim_' + sim_in + '_density' + number_formatter(sample_factors)
+  ;version = 'bjh_arrsim_' + sim_in + '_density' + number_formatter(sample_factors)
+  version = 'bjh_arrsim_' + sim_in + '_noflag_density' + number_formatter(sample_factors)
+  folder_names = 'fhd_' + version
+  folder_path = '/data4/MWA/FHD_Aug23/'
   
   if keyword_set(png) or keyword_set(eps) or keyword_set(pdf) then pub = 1 else pub = 0
   if pub eq 1 then begin
@@ -72,6 +76,14 @@ pro test_fhd_sim_suite, uvf_input = uvf_input, flat_sigma = flat_sigma, $
   for i=0, nbeams-1 do begin
     for j=0, n_elements(sample_factors)-1 do begin
     
+      ;; check to see if simulation exists
+      if keyword_set(uvf_input) then sim_file_test = file_test(folder_path + folder_names[j]+'/*gridded_uvf.sav') $
+      else sim_file_test = file_test(folder_path + folder_names[j]+'/Healpix/*cube*.sav')
+      if sim_file_test eq 0 then begin
+        eor_simulation_enterprise, start=36, end=36, version=version[j], sim_baseline_density=sample_factors[j], $
+          flat_sigma = flat_sigma, recalculate_all = recalc_sim
+      endif
+      
       print, 'calculating ps for ' + folder_names[j]
       enterprise_wrapper, folder_names[j],/sim, png = png, $
         refresh_ps=refresh_ps, refresh_binning = refresh_binning, $
