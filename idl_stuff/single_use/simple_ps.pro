@@ -1,12 +1,10 @@
 pro simple_ps, uv_data, uv_arr, freq_arr, uv_weights = uv_weights, spec_window_type=spec_window_type, $
     beam2_int = beam2_int
-  
-  if n_elements(uv_weights) eq 0 then uv_weights = uv_data*0. + 1.
     
   delta_u = uv_arr[1] - uv_arr[0]
   delta_v = uv_arr[1] - uv_arr[0]
   
-    if min(freq_arr) gt 1e8 then frequencies = freq_arr / 1e6 else frequencies = freq_arr
+  if min(freq_arr) gt 1e8 then frequencies = freq_arr / 1e6 else frequencies = freq_arr
   f_delta = frequencies[1]-frequencies[0]
   n_kz = n_elements(frequencies)
   
@@ -48,9 +46,11 @@ pro simple_ps, uv_data, uv_arr, freq_arr, uv_weights = uv_weights, spec_window_t
     wh_wt0 = where(al_weights eq 0, count_wt0, complement=wh_wt_gt0)
     if count_wt0 gt 0 then signal_mk[wh_wt0] = 0
   endif else begin
-    signal_mk = uv_data/uv_weights
-    wh_wt0 = where(uv_weights eq 0, count_wt0, complement=wh_wt_gt0)
-    if count_wt0 gt 0 then signal_mk[wh_wt0] = 0
+    if n_elements(uv_weights) gt 0 then begin
+      signal_mk = uv_data/uv_weights
+      wh_wt0 = where(uv_weights eq 0, count_wt0, complement=wh_wt_gt0)
+      if count_wt0 gt 0 then signal_mk[wh_wt0] = 0
+    endif else signal_mk = uv_data
   endelse
   ;; convert from Jy -> mK Mpc^2
   for i=0, n_kz-1 do signal_mk[*,*,i] = signal_mk[*,*,i] * conv_factor[i]
@@ -76,11 +76,11 @@ pro simple_ps, uv_data, uv_arr, freq_arr, uv_weights = uv_weights, spec_window_t
   
   print, 'stddev of k_cube in mK: ' + number_formatter(stddev(abs(signal_mk_k)), format='(e10.2)')
   
-  power_3d = abs(signal_mk_k)^2.
+  power_3d = abs(temporary(signal_mk_k))^2.
   
   power_1d = kspace_rebinning_1d(power_3d, kx_mpc, ky_mpc, kz_mpc, k_edges_mpc, k_bin = k1_bin, log_k = log_k1d, $
     binned_weights = weights_1d)
-  k_centers = (k_edges[1:*] - k_edges[0:n_elements(power)-12])/2.
+  k_centers = (k_edges_mpc[1] - k_edges_mpc[0])/2. + k_edges_mpc[0:n_elements(power)-2]
   
   ;; adjust for beam window function
   if n_elements(beam2_int) gt 0 then begin
@@ -95,7 +95,6 @@ pro simple_ps, uv_data, uv_arr, freq_arr, uv_weights = uv_weights, spec_window_t
   print, 'window_int', window_int
   
   print, 'mean of power in mK (final): ' + number_formatter(mean(power_1d), format='(e10.2)')
-  
   
   case strlowcase(!version.os_family) OF
     'windows': split_delim = ';'
@@ -129,16 +128,16 @@ pro simple_ps, uv_data, uv_arr, freq_arr, uv_weights = uv_weights, spec_window_t
     endif else make_win = 1
     if make_win eq 1 then window, 1
     
-    if keyword_set(flat_sigma) then yrange = minmax([max(power), new_power2[where(new_power2 gt 0)], 1e5, 1e7]) else yrange = minmax([power, new_power2[where(new_power2 gt 0)]])
+    if keyword_set(flat_sigma) then yrange = minmax([max(eor_power), power_1d[where(power_1d gt 0)],1e5,1e7]) $
+    else yrange = minmax([eor_power, power_1d[where(power_1d gt 0)]])
+    yrange = 10^float([floor(alog10(yrange[0])), ceil(alog10(yrange[1]))])
     
     cgplot, eor_kcenters, eor_power, psym=-3, /ylog, /xlog, title = title, yrange = yrange
     cgplot, k_centers, power_1d, psym=6, /over, color='red'
     cgplot, flat_kcenters, flat_power, psym=-3, /over, color='blue'
     
-    kpower_2d_plots, power_savefile, power = power_2d, kperp_edges = [locs_kpar-kx_mpc_delta/2., max(locs_kpar) + kx_mpc_delta/2.], $
-      kpar_edges = [locs_kz-kz_mpc_delta/2., max(locs_kz) + kz_mpc_delta/2.], window_num=2
   endif
-    
-   
+  
+  
   
 end
