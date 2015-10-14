@@ -45,7 +45,7 @@ pro plot_delay_transform, save_file, window_num = window_num
   vis_sort = temporary(vis[*, len_sort])
   
   
-  quick_image, transpose(abs(vis)), window_num = window_num+1, title = filebase, ytitle = 'freq channel', xtitle = 'baseline number (ordered by length)'
+  quick_image, transpose(abs(vis_sort)), window_num = window_num+1, title = filebase, ytitle = 'freq channel', xtitle = 'baseline number (ordered by length)'
   
   quick_image, transpose(abs(vis_ft_sort)), window_num = window_num, title = filebase, ytitle = 'delay channel', xtitle = 'baseline number (ordered by length)'
   cgplot, horizon_delay_bin_upper, /over
