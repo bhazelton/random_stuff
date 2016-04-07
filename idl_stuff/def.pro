@@ -14,9 +14,14 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','
   
 ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'fhdps_utils','ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
+;; add plus sign to get subdirectories. Don't want fhdps_utils added from here so don't include the root directory in that part
 fhd_path = '/Users/bryna/Documents/Physics/FHD/'
-fhd_path_dirs = fhd_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data', 'instrument_config', $
-    'simulation', 'simulation/simulation_wrappers']
+fhd_path_dirs = fhd_path + ['fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data', 'instrument_config', $
+    'simulation']
+    
+temp = fhd_path
+for i=0, n_elements(fhd_path_dirs)-1 do temp = [temp, expand_path('+' + fhd_path_dirs[i])]
+fhd_path_dirs = temp
 
 ;path_dirs = [fhdps_utils_dirs, ps_path_dirs, path_dirs, fhd_path_dirs]
 path_dirs = [ps_path_dirs, path_dirs, fhd_path_dirs]
