@@ -39,15 +39,18 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, n_freq = n_freq, f_avg =
   if keyword_set(use_sim) then begin
     restore, base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_beamfix/1061316176_input_model.sav' ; model_uvf, uv_arr, freq_arr
     eor_uvf_cube = temporary(model_uvf)*2.
+
     n_freq = n_elements(freq_arr)
     n_uv = n_elements(uv_arr)
     
     delta_uv = uv_arr[1] - uv_arr[0]
-    uv_max = max(uv_arr)
+    
+    uv_max = max(abs(uv_arr))
     title = 'delta uv: ' + number_formatter(delta_uv) + ', max uv: ' + number_formatter(uv_max)
     
     
     if keyword_set(apply_beam) then begin
+
       ;      beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_newconv/1061316176_initial_beam2_image.sav', 'beam2_xx_image')
     
       beam2_image = getvar_savefile(base_path('data') +'fhd_sim_data/snap_highf_eor_nomu_beamfix/1061316176_initial_beam2_image.sav', beam2_xx_image)
@@ -58,7 +61,8 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, n_freq = n_freq, f_avg =
       temp = shift(fft(fft(shift(temp,n_uv/2,n_uv/2,0), dimension=1, /inverse), dimension=2, /inverse),n_uv/2,n_uv/2,0)
       
       eor_uvf_cube = temp
-    endif
+
+   endif
     
   endif else begin
     if keyword_set(apply_beam) and n_elements(sim_beam) gt 0 then begin
@@ -461,6 +465,8 @@ pro test_eor_sim, delta_uv = delta_uv, uv_max = uv_max, n_freq = n_freq, f_avg =
     
     window_int = total(abs(beam[*,*,0])^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
     
+    ;window_int_tophat = total(beam_tophat[*,*,0]^2.*xy_mpc_delta^2.) * ((2.*!pi)/kz_mpc_delta)
+
     volume = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))
   endif else begin
     window_int = ((2.*!pi)^3./(kx_mpc_delta*ky_mpc_delta*kz_mpc_delta))

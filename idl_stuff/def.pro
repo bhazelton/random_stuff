@@ -15,7 +15,8 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','
 ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'fhdps_utils','ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
 
 fhd_path = '/Users/bryna/Documents/Physics/FHD/'
-fhd_path_dirs = fhd_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data', 'instrument_config', 'simulation']
+fhd_path_dirs = fhd_path + ['', 'fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data', 'instrument_config', $
+    'simulation', 'simulation/simulation_wrappers']
 
 ;path_dirs = [fhdps_utils_dirs, ps_path_dirs, path_dirs, fhd_path_dirs]
 path_dirs = [ps_path_dirs, path_dirs, fhd_path_dirs]

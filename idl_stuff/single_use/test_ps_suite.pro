@@ -246,7 +246,7 @@ pro test_ps_suite, recalculate_all = recalculate_all, recalculate_ps = recalcula
       noerase = 0
     endif else pos_use = positions[*,2*i]
     
-    quick_image, sim_ave_power_freq[i,*,*], total(reform(sim_ave_weights_freq[i,*,*]),2)/dims[1], $
+    quick_image, sim_ave_power_freq[i,*,*]/flat_power, total(reform(sim_ave_weights_freq[i,*,*]),2)/dims[1], $
       start_multi_params = start_multi_params, multi_pos = pos_use, $
       xtitle = 'ave weight', ytitle = 'frequency channel', title = 'straight power ave ' + beam_str[i], $
       png = png, eps = eps, pdf = pdf, alphabackgroundimage = alphabackgroundimage, savefile = plotfiles_use, noerase = noerase
@@ -258,7 +258,7 @@ pro test_ps_suite, recalculate_all = recalculate_all, recalculate_ps = recalcula
     endif
     
     pos_use = positions[*,2*i+1]
-    quick_image, sim_wt_ave_power_freq[i,*,*], total(reform(sim_ave_weights_freq[i,*,*]),2)/dims[1], $
+    quick_image, sim_wt_ave_power_freq[i,*,*]/flat_power, total(reform(sim_ave_weights_freq[i,*,*]),2)/dims[1], $
       start_multi_params = start_multi_params, multi_pos = pos_use, $
       xtitle = 'ave weight', ytitle = 'frequency channel', title = 'weighted power ave ' + beam_str[i], $
       png = png, eps = eps, pdf = pdf, alphabackgroundimage = alphabackgroundimage, savefile = plotfiles_use, noerase = noerase
