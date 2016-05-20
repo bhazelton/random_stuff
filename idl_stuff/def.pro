@@ -43,3 +43,5 @@ loadct,39
 ;; added this to prevent BadMatch errors on Lion, see coyote tip: http://www.idlcoyote.com/misc_tips/badmatch.php
 Device, RETAIN=2
 
+;; added this to get imagemagick to be found by IDL
+SetEnv, 'PATH=/opt/local/bin:$PATH'
