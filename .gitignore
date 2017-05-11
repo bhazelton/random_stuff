@@ -100,4 +100,4 @@ ENV/
 .ropeproject
 
 # csv files
-.csv
+*.csv
