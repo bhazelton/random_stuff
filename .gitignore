@@ -101,3 +101,6 @@ ENV/
 
 # csv files
 *.csv
+
+# CHAMP pdfs
+CHAMP/*.pdf
