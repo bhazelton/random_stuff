@@ -1,35 +1,30 @@
-;base_path = '/home/bryna/Documents/Physics/idl_working/'
-;base_path = '/Users/bryna/Documents/Physics/bryna_svn/idl_working/'
-git_path = '/Users/bryna/Documents/Physics/hazelton_git/idl_stuff/'
+git_path = '/Users/bryna/Projects/Physics/hazelton_git/idl_stuff/'
 
-path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions','coyote/' + ['', 'public/'], 'astron/pro/' + ['','jhuapl/'], $
-  'mwa', 'power_spectrum', $;;'fhd_sims', $
-  'single_use', 'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', 'misc', 'toolkit', 'visu', 'ximview/' + $
-  ['', 'docs', 'gscroll', 'hpx', 'utilities'], 'zzz_external/' + ['cgis', 'obsolete_astron']]] ;; , $
-;; 'UCSC/' + ['', 'ADELE', 'A0535', 'crab', 'preflight', 'solarfss/' + ['', 'visibilities', 'sas_temp'], $
-;;           'TGF_science/' + ['', 'land_sea/' + ['', 'lis'], 'wwlln', 'geant/' + ['', 'deadtime']]]]
-  
-;fhdps_utils_path = '/Users/bryna/Documents/Physics/fhdps_utils/'
-;fhdps_utils_dirs = fhdps_utils_path
-  
-ps_path_dirs = '/Users/bryna/Documents/Physics/PS/' + ['', 'fhdps_utils','ps_utils', 'ps_core', 'ps_wrappers', 'textoidl']
+path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions',$
+                        'coyote/' + ['', 'public/'], 'astron/pro/' + ['','jhuapl/'], $
+                        'mwa', 'power_spectrum', 'single_use', $
+                        'Healpix_3.11/src/idl/' + ['', 'examples', 'fits', 'interfaces', $
+                                                   'misc', 'toolkit', 'visu', 'ximview/' + $
+                                                   ['', 'docs', 'gscroll', 'hpx', 'utilities'], $
+                                                   'zzz_external/' + ['cgis', 'obsolete_astron']]]
+ps_path_dirs = '/Users/bryna/Projects/Physics/eppsilon/' + $
+  ['', 'fhdps_utils', 'ps_core', 'ps_compare', 'ps_plotting', $
+  'ps_setup', 'ps_utils', 'ps_wrappers', 'textoidl']
 
-;; add plus sign to get subdirectories. Don't want fhdps_utils added from here so don't include the root directory in that part
-fhd_path = '/Users/bryna/Documents/Physics/FHD/'
-fhd_path_dirs = fhd_path + ['fhd_utils', 'fhd_output', 'fhd_core', 'Observations', 'catalog_data', 'instrument_config', $
-    'simulation']
-    
+;; add plus sign to get subdirectories. Don't want fhdps_utils added from here
+;; so don't include the root directory in that part
+fhd_path = '/Users/bryna/Projects/Physics/FHD/'
+fhd_path_dirs = fhd_path + ['catalog_data', 'fhd_core', 'fhd_output', 'fhd_utils', $
+                            'instrument_config', 'Observations',  'simulation']
+
 temp = fhd_path
 for i=0, n_elements(fhd_path_dirs)-1 do temp = [temp, expand_path('+' + fhd_path_dirs[i])]
 fhd_path_dirs = temp
 
-;path_dirs = [fhdps_utils_dirs, ps_path_dirs, path_dirs, fhd_path_dirs]
 path_dirs = [ps_path_dirs, path_dirs, fhd_path_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
 
-;!path = path_string + ':/home/dsmith/rhessi/code:' + !path
 !path = path_string + !path
-;search_network, /enable
 
 init_healpix
 defsysv, '!HEALPIX', exist = hpx_is_defined
@@ -40,7 +35,8 @@ loadct,39
 !p.background = 255
 !p.color = 0
 
-;; added this to prevent BadMatch errors on Lion, see coyote tip: http://www.idlcoyote.com/misc_tips/badmatch.php
+;; added this to prevent BadMatch errors on Lion,
+;; see coyote tip: http://www.idlcoyote.com/misc_tips/badmatch.php
 Device, RETAIN=2
 
 ;; added this to get imagemagick to be found by IDL
