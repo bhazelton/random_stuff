@@ -40,4 +40,5 @@ loadct,39
 Device, RETAIN=2
 
 ;; added this to get imagemagick to be found by IDL
-SetEnv, 'PATH=/opt/local/bin:$PATH'
+;; took it out in Jan 2018 because it broke spawn commands and doesn't seem to be needed for imagemagick
+;; SetEnv, 'PATH=/opt/local/bin:$PATH'
