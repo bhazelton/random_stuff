@@ -1,4 +1,4 @@
-git_path = '/Users/bryna/Projects/Physics/hazelton_git/idl_stuff/'
+git_path = '/Users/bryna/Projects/Physics/random_stuff/idl_stuff/'
 
 path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions',$
                         'coyote/' + ['', 'public/'], 'astron/pro/' + ['','jhuapl/'], $
