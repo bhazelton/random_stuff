@@ -8,7 +8,7 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions',$
                                                    ['', 'docs', 'gscroll', 'hpx', 'utilities'], $
                                                    'zzz_external/' + ['cgis', 'obsolete_astron']]]
 ps_path_dirs = '/Users/bryna/Projects/Physics/eppsilon/' + $
-  ['', 'fhdps_utils', 'ps_core', 'ps_compare', 'ps_plotting', $
+  ['', 'ps_core', 'ps_compare', 'ps_plotting', $
   'ps_setup', 'ps_utils', 'ps_wrappers', 'textoidl']
 
 ;; add plus sign to get subdirectories. Don't want fhdps_utils added from here
@@ -21,7 +21,9 @@ temp = fhd_path
 for i=0, n_elements(fhd_path_dirs)-1 do temp = [temp, expand_path('+' + fhd_path_dirs[i])]
 fhd_path_dirs = temp
 
-path_dirs = [ps_path_dirs, path_dirs, fhd_path_dirs]
+fhdps_utils_dirs = '/Users/bryna/Projects/Physics/fhdps_utils'
+
+path_dirs = [ps_path_dirs, fhdps_utils_dirs, path_dirs, fhd_path_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
 
 !path = path_string + !path
