@@ -1,0 +1,39 @@
+name: hera
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - alembic
+  - astropy
+  - astropy-healpix
+  - cartopy
+  - plotly::chart-studio
+  - coverage
+  - flake8
+  - h5py
+  - matplotlib
+  - ipython
+  - jupyter
+  - numpy
+  - pandas
+  - plotly
+  - psutil
+  - psycopg2
+  - pytest-cov
+  - python-dateutil
+  - pypandoc
+  - pytest
+  - pytest-cov
+  - pyyaml
+  - redis-py
+  - scipy
+  - setuptools_scm
+  - six
+  - sphinx
+  - sqlalchemy
+  - tabulate
+  - pip
+  - pip:
+      - pytest-cases
+      - flake8-docstrings
+      - flake8-pytest
