@@ -1,9 +1,9 @@
-name: rasg38
+name: rasg27
 channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3.8
+  - python=2.7
   - astropy
   - astropy-healpix
   - coverage

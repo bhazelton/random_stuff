@@ -24,6 +24,7 @@ dependencies:
   - setuptools_scm
   - six
   - sphinx
+  - twine
   - pip
   - pip:
       - pytest-cases
