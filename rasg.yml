@@ -6,6 +6,7 @@ dependencies:
   - astropy
   - astropy-healpix
   - coverage
+  - cython
   - flake8
   - h5py
   - ipython

@@ -1,0 +1,22 @@
+name: scratch
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - astropy
+  - astropy-healpix
+  - astroquery
+  - ipython
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - mpi4py
+  - numpy
+  - pandas
+  - pyuvdata
+  - pyyaml
+  - scipy
+  - pip
+  - pip:
+      - pyradiosky
+      - git+https://github.com/RadioAstronomySoftwareGroup/pyuvsim
