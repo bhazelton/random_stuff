@@ -1,0 +1,14 @@
+name: pkgbuild
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - astropy
+  - numpy
+  - scipy
+  - h5py
+  - cython
+  - pip
+  - pip:
+     - pep517
+     - setuptools_scm
