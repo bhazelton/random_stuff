@@ -104,3 +104,6 @@ ENV/
 
 # CHAMP pdfs
 CHAMP/*.pdf
+
+# jupyter notebooks saved plots
+jupyter_notebooks/*.pdf
