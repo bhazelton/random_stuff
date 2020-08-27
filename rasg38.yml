@@ -6,6 +6,7 @@ dependencies:
   - python=3.8
   - astropy
   - astropy-healpix
+  - astroquery
   - coverage
   - cython
   - flake8

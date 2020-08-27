@@ -5,6 +5,7 @@ channels:
 dependencies:
   - astropy
   - astropy-healpix
+  - astroquery
   - coverage
   - cython
   - flake8
