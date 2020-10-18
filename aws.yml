@@ -1,0 +1,8 @@
+name: aws
+channels:
+  - defaults
+dependencies:
+  - pip
+  - pip:
+     - awscli
+     - aws-parallelcluster

@@ -13,6 +13,7 @@ dependencies:
   - mpi4py
   - numpy
   - pandas
+  - pre-commit
   - pyuvdata
   - pyyaml
   - scipy

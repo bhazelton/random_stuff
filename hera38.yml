@@ -3,7 +3,6 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - python=3.8
   - alembic
   - astropy
   - astropy-healpix
@@ -15,6 +14,7 @@ dependencies:
   - matplotlib
   - ipython
   - jupyter
+  - jupyterlab
   - numpy
   - pandas
   - plotly
