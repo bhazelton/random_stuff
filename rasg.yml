@@ -15,6 +15,7 @@ dependencies:
   - jupyter
   - mpi4py
   - numpy
+  - pre-commit
   - psutil
   - pypandoc
   - pytest
@@ -29,6 +30,7 @@ dependencies:
   - twine
   - pip
   - pip:
+      - lunarsky
       - black
       - flake8-builtins
       - flake8-comprehensions
@@ -36,6 +38,5 @@ dependencies:
       - flake8-pytest
       - flake8-rst-docstrings
       - pep8-naming
-      - pre-commit
       - pytest-cases
       - toml
