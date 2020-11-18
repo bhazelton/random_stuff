@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - astropy
+  - astropy>=4.1
   - astropy-healpix
   - astroquery
   - coverage
@@ -26,7 +26,7 @@ dependencies:
   - scipy
   - setuptools_scm
   - spiceypy
-  - sphinx
+  - sphinx>=3.3
   - twine
   - pip
   - pip:
