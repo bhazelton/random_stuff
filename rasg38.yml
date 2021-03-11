@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - python=3.8
-  - astropy>=4.1
+  - astropy>=4.2
   - astropy-healpix
   - astroquery
   - coverage
@@ -22,7 +22,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-xdist
-  - python-casacore
+  - python-casacore>=3.1.0
   - pyyaml
   - scipy
   - setuptools_scm

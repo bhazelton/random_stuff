@@ -1,0 +1,31 @@
+name: hera_stack
+channels:
+  - defaults
+  - conda-forge
+dependencies:
+  - alembic
+  - astropy
+  - astropy-healpix
+  - coverage
+  - flake8
+  - h5py
+  - matplotlib
+  - ipython
+  - jupyter
+  - jupyterlab
+  - numpy
+  - pandas
+  - pytest-cov
+  - pytest
+  - pyyaml
+  - scikit-learn
+  - scipy
+  - setuptools_scm
+  - six
+  - sphinx
+  - pip
+  - pip:
+    - flake8-docstrings
+    - flake8-pytest
+    - git+https://github.com/HERA-Team/linsolve.git
+    - git+https://github.com/HERA-Team/uvtools.git
