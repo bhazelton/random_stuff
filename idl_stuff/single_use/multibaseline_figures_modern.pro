@@ -11,8 +11,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
   savefile = folder_name + path_sep()+ 'multibaseline_data_modern.idlsave'
   ftest = file_test(savefile) *  (1 - file_test(savefile, /zero_length))
 
-   model_obs_name1 = '1094485088_whole_obs_no_flags'
-   ; model_obs_name2 = '1094485088_second_half_no_flags'
+   model_obs_name = '1094485088_whole_obs_no_flags'
 
    plot_exten = ''
    if keyword_set(png) then begin
@@ -81,60 +80,26 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          ps_options = ps_options)
 
 
-      model1_obs_info = ps_filenames(folder_name, model_obs_name1, $
+      model_obs_info = ps_filenames(folder_name, model_obs_name, $
          exact_obsnames = exact_obsnames, uvf_input = uvf_input, $
          data_subdirs = data_subdirs, ps_foldernames = ps_foldername, $
          save_paths = save_path, plot_paths = plot_path, refresh_info = refresh_info)
 
-      if model1_obs_info.info_files[0] ne '' then begin
-         model1_datafile = model1_obs_info.info_files[0]
+      if model_obs_info.info_files[0] ne '' then begin
+         model_datafile = model_obs_info.info_files[0]
       endif else begin
-         model1_datafile = model1_obs_info.cube_files.(0)
+         model_datafile = model_obs_info.cube_files.(0)
       endelse
 
-      model1_file_struct_arr = fhd_file_setup(model1_datafile, beamfile = beamfiles, /sim, $
+      model_file_struct_arr = fhd_file_setup(model_datafile, beamfile = beamfiles, /sim, $
          uvf_input = uvf_input, savefilebase = savefilebase, save_path = save_path, $
          freq_ch_range = freq_ch_range, freq_flags = freq_flags, freq_flag_name = freq_flag_name, $
          refresh_info = refresh_options.refresh_info, uvf_options = uvf_options, $
          ps_options = ps_options)
 
-      ; model2_obs_info = ps_filenames(folder_name, model_obs_name2, $
-      ;    exact_obsnames = exact_obsnames, uvf_input = uvf_input, $
-      ;    data_subdirs = data_subdirs, ps_foldernames = ps_foldername, $
-      ;    save_paths = save_path, plot_paths = plot_path, refresh_info = refresh_info)
-
-      ; if model2_obs_info.info_files[0] ne '' then begin
-      ;    model2_datafile = model2_obs_info.info_files[0]
-      ; endif else begin
-      ;    model2_datafile = model2_obs_info.cube_files.(0)
-      ; endelse
-
-      ; model2_file_struct_arr = fhd_file_setup(model2_datafile, beamfile = beamfiles, /sim, $
-      ;    uvf_input = uvf_input, savefilebase = savefilebase, save_path = save_path, $
-      ;    freq_ch_range = freq_ch_range, freq_flags = freq_flags, freq_flag_name = freq_flag_name, $
-      ;    refresh_info = refresh_options.refresh_info, uvf_options = uvf_options, $
-      ;    ps_options = ps_options)
-
-      ; simfile = froot + 'sim_496t_offaxis_uvf.idlsave'
-      ; info_file = froot + 'sim_496t_info.idlsave'
-      ; weights_file = froot + 'sim_496t_weights.idlsave'
-      ; beam_file = froot + 'sim_496t_beam.idlsave'
-
-      ; tile_locs_file = '496T_tile_locations.txt'
-
-      ; textfast,tile_locs,/read,filename=tile_locs_file,root=rootdir('mwa'),first_line=1,column=indgen(2)+1
-      ; restore, info_file
-      ; restore, simfile
-      ; restore, weights_file
-      ; undefine, tile_beam_image
-
-      ; restore, beam_file
-      ; beam_uv = beam_uv[*,*,*,0] ;; just go to XX pol for now
-
       ; just use xx pol for now:
       file_struct = file_struct_arr[0]
-      model1_file_struct = model1_file_struct_arr[0]
-      ; model2_file_struct = model2_file_struct_arr[0]
+      model_file_struct = model_file_struct_arr[0]
 
       filebase = cgRootName(file_struct.datafile[0], directory=froot)
       end_pos_even = strpos(strmid(filebase, 0), '_even')
@@ -257,43 +222,22 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          uvf_cube = temporary(data_cube1) + temporary(data_cube2)
       endif else uvf_cube = temporary(data_cube1)
 
-      model1_wt_cube1 = get_cube_uvf_input(model1_file_struct.datafile[0], $
-         model1_file_struct.weightvar, n_freq, file_struct.pol_index)
+      model_wt_cube1 = get_cube_uvf_input(model_file_struct.datafile[0], $
+         model_file_struct.weightvar, n_freq, file_struct.pol_index)
       if nfiles eq 2 then begin
-         model1_wt_cube2 = get_cube_uvf_input(model1_file_struct.datafile[1], $
-            model1_file_struct.weightvar, n_freq, file_struct.pol_index)
-         model1_weights_cube = temporary(model1_wt_cube1) + temporary(model1_wt_cube2)
-      endif else model1_weights_cube = temporary(model1_wt_cube1)
+         model_wt_cube2 = get_cube_uvf_input(model_file_struct.datafile[1], $
+            model_file_struct.weightvar, n_freq, file_struct.pol_index)
+         model_weights_cube = temporary(model_wt_cube1) + temporary(model_wt_cube2)
+      endif else model_weights_cube = temporary(model_wt_cube1)
 
-      ; model2_wt_cube1 = get_cube_uvf_input(model2_file_struct.datafile[0], $
-      ;    model2_file_struct.weightvar, n_freq, file_struct.pol_index)
-      ; if nfiles eq 2 then begin
-      ;    model2_wt_cube2 = get_cube_uvf_input(model2_file_struct.datafile[1], $
-      ;       model2_file_struct.weightvar, n_freq, file_struct.pol_index)
-      ;    model2_weights_cube = temporary(model2_wt_cube1) + temporary(model2_wt_cube2)
-      ; endif else model2_weights_cube = temporary(model2_wt_cube1)
-
-      ; model_weights_cube = temporary(model1_weights_cube) + temporary(model2_weights_cube)
-      model_weights_cube = temporary(model1_weights_cube)
-
-      model1_cube1 = get_cube_uvf_input(model1_file_struct.datafile[0], $
-         model1_file_struct.datavar, n_freq, file_struct.pol_index)
+      model_cube1 = get_cube_uvf_input(model_file_struct.datafile[0], $
+         model_file_struct.datavar, n_freq, file_struct.pol_index)
       if nfiles eq 2 then begin
-         model1_cube2 = get_cube_uvf_input(model1_file_struct.datafile[1], $
-            model1_file_struct.datavar, n_freq, file_struct.pol_index)
-         model1_uvf_cube = temporary(model1_cube1) + temporary(model1_cube2)
-      endif else model1_uvf_cube = temporary(model1_cube1)
+         model_cube2 = get_cube_uvf_input(model_file_struct.datafile[1], $
+            model_file_struct.datavar, n_freq, file_struct.pol_index)
+         model_uvf_cube = temporary(model_cube1) + temporary(model_cube2)
+      endif else model_uvf_cube = temporary(model_cube1)
 
-      ; model2_cube1 = get_cube_uvf_input(model2_file_struct.datafile[0], $
-      ;    model2_file_struct.datavar, n_freq, file_struct.pol_index)
-      ; if nfiles eq 2 then begin
-      ;    model2_cube2 = get_cube_uvf_input(model2_file_struct.datafile[1], $
-      ;       model2_file_struct.datavar, n_freq, file_struct.pol_index)
-      ;    model2_uvf_cube = temporary(model2_cube1) + temporary(model2_cube2)
-      ; endif else model2_uvf_cube = temporary(model2_cube1)
-
-      ; model_uvf_cube = temporary(model1_uvf_cube) + temporary(model2_uvf_cube)
-      model_uvf_cube = temporary(model1_uvf_cube)
 
 ;       quick_image, (abs(uvf_cube))[*,200,*], title='|uvf_cube|'
 ;       quick_image, (abs(model_uvf_cube))[*,200,*], window=2, title='|model_cube|'
@@ -325,18 +269,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       n_v = dims[1]
       uv_arr = (dindgen(n_u) - n_u/2d) * uv_binsize
 
-      ;; get input cube
-      ;; columns are: x location (zero centered), y location (zero centered), flux
-      ; my_sources = reform(my_sources, 3, n_elements(my_sources)/3)
-      ; n_sources = (size(my_sources, /dimension))[1]
-      ; my_source_array = reform(fltarr(7, n_sources), 7, n_sources)
-      ; my_source_array[0,*]=my_sources[0,*] + n_u/2.
-      ; my_source_array[1,*]=my_sources[1,*] + n_v/2.
-      ; my_source_array[4,*]=my_sources[2,*] + n_v/2.
-      ; my_source_array[5,*]=Round(my_source_array[0,*])+Round(my_source_array[1,*])*n_u
-
-      ; model_uv = visibility_source_uv_grid(my_source_array, u_dim = n_u, v_dim = n_v)
-      ;; get jones_file
       catalog = getvar_savefile(sky_model_file, 'catalog')
       apply_astrometry, obs, ra_arr=catalog.ra, dec_arr=catalog.dec, x_arr=x_arr, y_arr=y_arr, /ad2xy
       catalog.x=x_arr
@@ -344,7 +276,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
       jones = getvar_savefile(jones_file, 'jones')
 
-      ; small_catalog = catalog[0:100]
       source_dft_multi,obs,jones,catalog,model_uv_ptr,spectral_uv_full,xvals=xvals,yvals=yvals,uv_i_use=uv_i_use,$
          conserve_memory=conserve_memory,frequency=frequency,dft_threshold=dft_threshold,silent=silent,$
          dimension=dimension,elements=elements,n_pol=n_pol,spectral_model_uv_arr=spectral_model_uv_arr,$
@@ -352,19 +283,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          gaussian_source_models = gaussian_source_models,_Extra=extra
 
       model_uv = *model_uv_ptr[file_struct.pol_index]
-
-      ; ;; get gridding normalizations
-      ; norm_sources = reform([0,0,1], 3, 1)
-      ; n_sources = (size(norm_sources, /dimension))[1]
-      ; norm_source_array = reform(fltarr(7, n_sources), 7, n_sources)
-      ; norm_source_array[0,*]=norm_sources[0,*] + n_u/2.
-      ; norm_source_array[1,*]=norm_sources[1,*] + n_v/2.
-      ; norm_source_array[4,*]=norm_sources[2,*] + n_v/2.
-      ; norm_source_array[5,*]=Round(norm_source_array[0,*])+Round(norm_source_array[1,*])*n_u
-      ; test_gridding = visibility_source_uv_grid(norm_source_array)
-      ; norm_gridding = 1/max(abs(test_gridding))
-      ;
-      ; model_uv = model_uv * norm_gridding
 
       psf_dim = psf.dim
       ntimes = obs.n_time
@@ -384,9 +302,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    endif else begin
       plotfile = base_path('plots') + 'single_use/multibaseline_modern_beam' + plot_exten
    endelse
-
-   ;;fractions = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, .1, .2, .5]
-   ;;fractions = [0.002, 0.1*(indgen(9)+1)]
 
    ; beam_freq_ind = 16
    beam_freq_ind = 0
