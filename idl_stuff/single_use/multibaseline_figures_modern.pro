@@ -179,14 +179,14 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
       ;; normalize to make integral = 1
       beam_uv = beam_uv / rebin(reform($
-      total(total(beam_uv, 2), 1), 1, 1, n_beam_freq), psf.dim, psf.dim, n_beam_freq, /sample)
+         total(total(beam_uv, 2), 1), 1, 1, n_beam_freq), psf.dim, psf.dim, n_beam_freq, /sample)
       beam_uv_arr  = (dindgen(psf.dim) - psf.dim/2d) * uv_binsize
 
       beam_cutoff_factor = 0.001d
       beam_radii = dblarr(n_beam_freq)
       window, 3
       for i = 0, n_beam_freq-1 do begin
-         level = max(beam_uv[*,*,i])*0.001d
+         level = max(beam_uv[*,*,i])*beam_cutoff_factor
 
          cgcontour, beam_uv[*,*,i], beam_uv_arr, beam_uv_arr, levels=level, $
                      path_info = beam_contour_info, path_xy = beam_contour_xy, /path_data_coords
@@ -546,14 +546,14 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
    sim_model_diff = sim_cube - model_uv_cube
    quick_image, atan(sim_model_diff[u_pix,*,*],/phase), uv_arr, frequencies, window = 4, $
-      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - model)'
+      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - analytic)'
    cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
    cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
    cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
 
    sim_model_diff2 = sim_cube - sim_model_cube
    quick_image, atan(sim_model_diff2[u_pix,*,*],/phase), uv_arr, frequencies, window = 6, $
-      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - sim_model)'
+      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - reconstructed model)'
    cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
    cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
    cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
@@ -585,7 +585,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    amp_residual = abs(pix_vals) - abs(input_val)
    phase_residual = (atan(pix_vals,/phase) - atan(input_val,/phase)) * 180d/ !dpi
 
-   ; same calc but with sim_model
+   ; same calc but with sim_model (reconstructed)
    sim_input_val = reform(sim_model_cube[u_pix, v_pix, *])
    sim_amp_residual = abs(pix_vals) - abs(sim_input_val)
    sim_phase_residual = (atan(pix_vals,/phase) - atan(sim_input_val,/phase)) * 180d/ !dpi
@@ -759,7 +759,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
 
    ;; make center of mass track plot
-   
+
    window_num=3
    track_xlen = max(influence_cog_uv_loc[0,*]) - min(influence_cog_uv_loc[0,*])
    track_ylen = max(influence_cog_uv_loc[1,*]) - min(influence_cog_uv_loc[1,*])
