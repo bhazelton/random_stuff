@@ -153,17 +153,17 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       tile_A = (*obs.baseline_info).tile_a
       tile_B = (*obs.baseline_info).tile_b
 
-      ; if obs.nbaselines ne ((n_tiles^2-n_tiles)/2 + n_tiles) then stop
-      nbaselines = n_elements(tile_A)
+      ; if obs.nbaseline_times ne ((n_tiles^2-n_tiles)/2 + n_tiles) then stop
+      nbaseline_times = n_elements(tile_A)
       params = getvar_savefile(params_file, 'params')
 
       frequencies = file_struct.frequencies
       n_freq = n_elements(frequencies)
 
-      baseline_u = rebin(params.uu, nbaselines, n_freq, /sample) * $
-                  rebin(reform(frequencies * 1e6, 1, n_freq), nbaselines, n_freq, /sample)
-      baseline_v = rebin(params.vv, nbaselines, n_freq, /sample) * $
-                  rebin(reform(frequencies * 1e6, 1, n_freq), nbaselines, n_freq, /sample)
+      baseline_u = rebin(params.uu, nbaseline_times, n_freq, /sample) * $
+                  rebin(reform(frequencies * 1e6, 1, n_freq), nbaseline_times, n_freq, /sample)
+      baseline_v = rebin(params.vv, nbaseline_times, n_freq, /sample) * $
+                  rebin(reform(frequencies * 1e6, 1, n_freq), nbaseline_times, n_freq, /sample)
 
       ;; get beams
       psf = getvar_savefile(beams_file, 'psf')
@@ -291,7 +291,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       save, file = savefile, sim_cube, weights_cube, sim_model_cube, model_weights_cube, $
             model_uv, uv_arr, $
             baseline_u, baseline_v, frequencies, beam_uv, beam_shape, $
-            beam_radii, nbaselines, ntimes, degpix, beam_uv_arr, n_freq, $
+            beam_radii, nbaseline_times, ntimes, degpix, beam_uv_arr, n_freq, $
             psf_dim, beam_fbin, n_u, n_v, uv_binsize, beam_cutoff_factor
    endif else restore, savefile
 
@@ -510,13 +510,11 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    endelse
 
    bl_keep_fraction = 1 ; 0.1
-   nbls_to_keep = round(nbaselines * bl_keep_fraction)
-   blt_select = rebin(indgen(nbls_to_keep), nbls_to_keep, ntimes, /sample) $
-      + rebin(reform(indgen(ntimes)*nbaselines, 1, ntimes), nbls_to_keep, ntimes, /sample)
-   blt_select = reform(blt_select, nbls_to_keep * ntimes)
-
-   baseline_u = baseline_u[indgen(nbls_to_keep), *]
-   baseline_v = baseline_v[indgen(nbls_to_keep), *]
+   if bl_keep_fraction ne 1 then begin
+      nblts_to_keep = round(nbaseline_times * bl_keep_fraction)
+      baseline_u = baseline_u[indgen(nblts_to_keep), *]
+      baseline_v = baseline_v[indgen(nblts_to_keep), *]
+   endif
 
    shade_freqs_range = [181, 188]
    sim_uv_extent = (size(sim_cube, /dim))[0]
@@ -618,14 +616,23 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       fbin_inds = where(beam_fbin eq fbin_i, count_fbin)
       if count_fbin gt 0 then beam_radii_freq[fbin_inds] = beam_radii[fbin_i]
    endfor
-   wh_contrib = where(baseline_dist / rebin(reform(beam_radii_freq, 1, n_freq), nbls_to_keep, n_freq, /sample) le 1d, count_wh)
+   if bl_keep_fraction ne 1 then begin
+      wh_contrib = where(baseline_dist / rebin(reform(beam_radii_freq, 1, n_freq), nblts_to_keep, n_freq, /sample) le 1d, count_wh)
+   endif else begin
+      wh_contrib = where(baseline_dist / rebin(reform(beam_radii_freq, 1, n_freq), nbaseline_times, n_freq, /sample) le 1d, count_wh)
+   endelse
    if count_wh eq 0 then begin
       print, "No contributing baselines at any frequencies"
       stop
    endif
 
-   baseline_inds = wh_contrib mod nbls_to_keep
-   freq_inds = wh_contrib / nbls_to_keep
+   if bl_keep_fraction ne 1 then begin
+      baseline_inds = wh_contrib mod nblts_to_keep
+      freq_inds = wh_contrib / nblts_to_keep
+   endif else begin
+      baseline_inds = wh_contrib mod nbaseline_times
+      freq_inds = wh_contrib / nbaseline_times
+   endelse
    ncontrib_freq = histogram(freq_inds, min=0, max=n_freq-1)
    if min(ncontrib_freq) eq 0 then begin
       print, "No contributing baselines at some frequencies"
@@ -936,6 +943,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
       for i=0, count_contrib-1 do cgplot, /overplot, [bcontrib_locs[contrib_inds[i],j,0]], [bcontrib_locs[contrib_inds[i],j,1]], $
                                           psym = 16, color = baseline_loc_color, symsize=0.6
+
       cgplot, /overplot,outline_shape.(j)[0,*], outline_shape.(j)[1,*], psym=-3, color = 'black', thick = thick
 
       cgplot, /overplot, [uv_loc[0]], [uv_loc[1]], psym=1, thick=2, color = uv_mark_color
