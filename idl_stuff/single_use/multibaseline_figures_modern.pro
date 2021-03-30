@@ -681,6 +681,8 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    window, 3
    cgloadct, 13, /brewer
    val_add = dblarr(nb_contrib, n_freq)
+   influence_peak_uv_loc = dblarr(2, n_freq)
+   influence_cog_uv_loc = dblarr(2, n_freq)
    for j=0, n_freq-1 do begin
       for i=0, nb_contrib-1 do begin
          if mask[i,j] eq 0 then continue
@@ -732,6 +734,19 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       cgcontour, weights_map[*,*,j], map_uv_arr[*,0], map_uv_arr[*,1], levels=level, $
                   path_info = outline_contour_info, path_xy = outline_contour_xy, /path_data_coords
 
+      wh_max_influence = where(influence_map[*, *, j] eq max(influence_map[*, *, j]), count_infl_max)
+      if count_infl_max eq 1 then begin
+         influence_peak_uv_loc[0, j] = map_uv_arr[wh_max_influence mod map_size[0], 0]
+         influence_peak_uv_loc[1, j] = map_uv_arr[wh_max_influence / map_size[0], 1]
+      endif else begin
+         stop
+      endelse
+     
+      influence_cog_uv_loc[0, j] = total(influence_map[*, *, j] * $
+         rebin(map_uv_arr[*,0], map_size[0], map_size[1]))/total(influence_map[*, *, j])
+      influence_cog_uv_loc[1, j] = total(influence_map[*, *, j] * $
+         rebin(reform(map_uv_arr[*,1], 1, map_size[1]), map_size[0], map_size[1]))/total(influence_map[*, *, j])
+
       plot, map_uv_arr[*,0], map_uv_arr[*,1], /xstyle,/ystyle
       cgimage, weights_map[*,*,j], /noerase, /overplot,/scale
       oplot, outline_contour_xy[0,*], outline_contour_xy[1,*], color=255
@@ -741,6 +756,117 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          outline_shape = create_struct(outline_shape, tag, outline_contour_xy)
    endfor
    wdelete, 3
+
+
+   ;; make center of mass track plot
+   
+   window_num=3
+   track_xlen = max(influence_cog_uv_loc[0,*]) - min(influence_cog_uv_loc[0,*])
+   track_ylen = max(influence_cog_uv_loc[1,*]) - min(influence_cog_uv_loc[1,*])
+   track_maxlen = max([track_xlen, track_ylen])
+   track_xcenter = min(influence_cog_uv_loc[0,*]) + track_xlen/2
+   track_ycenter = min(influence_cog_uv_loc[1,*]) + track_ylen/2
+   plot_xrange = track_xcenter + [-1,1]*track_maxlen/2 +[-0.5, 0.5]
+   plot_yrange = track_ycenter + [-1,1]*track_maxlen/2 +[-0.5, 0.5]
+
+   ;; Work out plot & colorbar positions
+   ;; in units of plot area (incl. margins)
+   cb_size = 0.025
+   margin = [0.2, 0.2, 0.02, 0.1]
+  
+   cb_margin = [0.2, 0.02]
+  
+   plot_pos = [margin[0], margin[1], (1-cb_margin[1]-cb_size-cb_margin[0]-margin[2]), (1-margin[3])]
+   cb_pos = [(1-cb_margin[1]-cb_size), margin[1], (1-cb_margin[1]), (1-margin[3])]
+  
+   plot_len = [plot_pos[2]-plot_pos[0], plot_pos[3] - plot_pos[1]]
+   plot_aspect = (plot_pos[3] - plot_pos[1]) / (plot_pos[2] - plot_pos[0])
+  
+   data_aspect = 1
+   aspect_ratio =  data_aspect /plot_aspect
+   if aspect_ratio gt 1 then begin
+      y_factor = aspect_ratio
+      x_factor = 1.
+   endif else begin
+      y_factor = 1.
+      x_factor = 1./aspect_ratio
+   endelse
+  
+   screen_size = get_screen_size()
+   max_xsize = screen_size[0]
+   max_ysize = screen_size[1]
+   base_size = 600
+
+   xsize = round(base_size * x_factor)
+   ysize = round(base_size * y_factor)
+
+   if windowavailable(window_num) then begin
+      wset, window_num
+      if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+   endif else make_win = 1
+   if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+         
+   cgerase
+
+   if keyword_set(pub) then begin
+      ps_aspect = y_factor / x_factor
+      
+      if ps_aspect lt 1 then landscape = 1 else landscape = 0
+      IF Keyword_Set(eps) THEN landscape = 0
+      sizes = cgpswindow(LANDSCAPE=landscape, aspectRatio = ps_aspect, /sane_offsets)
+            
+      cgps_open, savefile, /font, encapsulated=eps, /nomatch, inches=sizes.inches, $
+         xsize=sizes.xsize, ysize=sizes.ysize, $
+         xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
+
+      font = 1
+
+   endif else begin
+      font = -1
+   endelse
+   charsize = 1.5
+
+   colors = round(cgScaleVector(findgen(n_freq), 0, 255))
+
+   infl_track_plotfile = base_path('plots') + 'single_use/multibaseline_modern_track' + plot_exten
+
+   if keyword_set(pub) then begin
+      cgps_open, infl_track_plotfile, /font, encapsulated=eps
+   endif
+
+   cgplot, influence_cog_uv_loc[0,*], influence_cog_uv_loc[1,*], /nodata, position = plot_pos, $
+      charsize = charsize, font = font, $
+      xrange=plot_xrange, yrange=plot_yrange, title='Influence Center of Mass', $
+      xtitle=textoidl('u (\lambda)', font = font), ytitle=textoidl('v (\lambda)', font = font)
+   cgloadct, 25, /brewer
+   for j=0, n_freq-2 do begin
+      if frequencies[j] ge shade_freqs_range[0] and frequencies[j] le shade_freqs_range[1] then begin
+         thickness=4
+      endif else begin
+         thickness=1
+      endelse
+      cgplot, /over, [influence_cog_uv_loc[0, j], influence_cog_uv_loc[0, j+1]], $
+         [influence_cog_uv_loc[1, j], influence_cog_uv_loc[1, j+1]], color=strtrim(colors[j],2), thick=thickness
+   endfor
+   for j=0, n_freq-1 do begin
+      if frequencies[j] ge shade_freqs_range[0] and frequencies[j] le shade_freqs_range[1] then begin
+         psym=16
+         symsize=1
+      endif else begin
+         psym=9
+         symsize=0.8
+      endelse
+      cgplot, /over, influence_cog_uv_loc[0, j], influence_cog_uv_loc[1, j], $
+         psym=psym, symsize=symsize, color=strtrim(colors[j],2)
+   endfor
+
+   cgcolorbar, range=minmax(frequencies), position = cb_pos, /vertical, $
+      charsize = charsize, font = font, title = "Frequency (MHz)"
+
+   if keyword_set(pub) then begin
+      cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
+      wdelete, window_num
+   endif
 
    ;; weights_color_range = [0, 255]
    ;; weights_n_colors = weights_color_range[1] - weights_color_range[0]
