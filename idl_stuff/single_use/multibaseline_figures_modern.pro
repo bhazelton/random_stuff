@@ -503,12 +503,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
    ;; Main figure
 
-   if keyword_set(grey_scale) then begin
-      plotfile = base_path('plots') + 'single_use/multibaseline_modern_fig_grey' + plot_exten
-   endif else begin
-      plotfile = base_path('plots') + 'single_use/multibaseline_modern_fig' + plot_exten
-   endelse
-
    bl_keep_fraction = 1 ; 0.1
    if bl_keep_fraction ne 1 then begin
       nblts_to_keep = round(nbaseline_times * bl_keep_fraction)
@@ -524,20 +518,31 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    model_uv_range_use = [model_uv_extent/2 - sim_uv_extent/2 + 1, model_uv_extent/2 + sim_uv_extent/2]
    model_uv_use = model_uv[model_uv_range_use[0]:model_uv_range_use[1], model_uv_range_use[0]:model_uv_range_use[1]]
 
-   u_pix = 200
-   v_pix = 110
+   ; u_pix = 200
+   ; v_pix = 140
+   ; v_pix = 110
+   u_pix = 125
+   v_pix = 205
+
    uv_loc = [uv_arr[u_pix], uv_arr[v_pix]]
+
+   plotfile = base_path('plots') + 'single_use/multibaseline_modern_fig'
+   plotfile += '_u' + number_formatter(u_pix) + '_v' + number_formatter(v_pix)
+   if keyword_set(use_sim_residual) then begin
+      plotfile += '_simres'
+   endif else begin
+      plotfile += '_analyticres'
+   endelse
+
+   if keyword_set(grey_scale) then begin
+      plotfile += '_grey'
+   endif
+   plotfile += plot_exten
 
    ; quick_image, atan(sim_cube[u_pix,*,*],/phase), uv_arr, frequencies, window = 4
    ; cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
    ; cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
    ; cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
-
-   quick_image, weights_cube[u_pix,*,*], uv_arr, frequencies, window = 5, $
-      ytitle='frequency (MHz)', xtitle='v', title='Weights'
-   cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
 
    model_uv_cube = rebin(reform(real_part(model_uv_use), sim_uv_extent, sim_uv_extent, 1), $
       sim_uv_extent, sim_uv_extent, n_freq, /sample) $
@@ -545,19 +550,45 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          sim_uv_extent, sim_uv_extent, n_freq, /sample)
 
    sim_model_diff = sim_cube - model_uv_cube
-   quick_image, atan(sim_model_diff[u_pix,*,*],/phase), uv_arr, frequencies, window = 4, $
-      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - analytic)'
-   cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
-
    sim_model_diff2 = sim_cube - sim_model_cube
-   quick_image, atan(sim_model_diff2[u_pix,*,*],/phase), uv_arr, frequencies, window = 6, $
-      ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - reconstructed model)'
-   cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
-   cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
 
+   if min(abs(uv_loc)) eq abs(uv_arr[u_pix]) then begin
+      quick_image, weights_cube[u_pix,*,*], uv_arr, frequencies, window = 5, $
+         ytitle='frequency (MHz)', xtitle='v', title='Weights'
+      cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+
+      quick_image, atan(sim_model_diff[u_pix,*,*],/phase), uv_arr, frequencies, window = 4, $
+         ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - analytic)'
+      cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+
+      quick_image, atan(sim_model_diff2[u_pix,*,*],/phase), uv_arr, frequencies, window = 6, $
+         ytitle='frequency (MHz)', xtitle='v', title='Phase (sim - reconstructed model)'
+      cgplot, /over, [uv_loc[1], uv_loc[1]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+   endif else begin
+      quick_image, weights_cube[*,v_pix,*], uv_arr, frequencies, window = 5, $
+         ytitle='frequency (MHz)', xtitle='u', title='Weights'
+      cgplot, /over, [uv_loc[0], uv_loc[0]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+
+      quick_image, atan(sim_model_diff[*,v_pix,*],/phase), uv_arr, frequencies, window = 4, $
+         ytitle='frequency (MHz)', xtitle='u', title='Phase (sim - analytic)'
+      cgplot, /over, [uv_loc[0], uv_loc[0]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+
+      quick_image, atan(sim_model_diff2[*,v_pix,*],/phase), uv_arr, frequencies, window = 6, $
+         ytitle='frequency (MHz)', xtitle='u', title='Phase (sim - reconstructed model)'
+      cgplot, /over, [uv_loc[0], uv_loc[0]], [0, max(frequencies)], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[0], shade_freqs_range[0]], color="black"
+      cgplot, /over, [min(uv_arr), max(uv_arr)], [shade_freqs_range[1], shade_freqs_range[1]], color="black"
+   endelse
 ; stop
    undefine_fhd, sim_model_diff, sim_model_diff2
 
@@ -590,6 +621,10 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    sim_amp_residual = abs(pix_vals) - abs(sim_input_val)
    sim_phase_residual = (atan(pix_vals,/phase) - atan(sim_input_val,/phase)) * 180d/ !dpi
 
+   ; also calculate the reconstructed to analytic residual
+   model_analytic_amp_residual = abs(sim_input_val) - abs(input_val)
+   model_analytic_phase_residual = (atan(sim_input_val,/phase) - atan(input_val,/phase)) * 180d/ !dpi
+
    error_scale_factor = 0.05
    sigma = sigma * error_scale_factor
    amp_error = sqrt(2d) * sigma
@@ -609,6 +644,79 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
    sim_amp_range = [-1,1] * max(abs(sim_amp_residual))
    sim_res_phase_range = [-1,1] * max(abs(sim_phase_residual))
+
+   model_analytic_amp_range = [-1,1] * max(abs(model_analytic_amp_residual))
+   model_analytic_phase_range = [-1,1] * max(abs(model_analytic_phase_residual))
+
+
+   ;; phase residual comparison plots
+
+   delta_freq = frequencies[1]-frequencies[0]
+   freq_plot = [frequencies[0]-delta_freq/2, frequencies, frequencies[n_freq-1]+delta_freq/2]
+   sim_phase_res_plot = [sim_phase_residual[0], sim_phase_residual, sim_phase_residual[n_freq-1]]
+   analytic_res_plot = [phase_residual[0], phase_residual, phase_residual[n_freq-1]]
+   if use_sim_residual then begin
+      phase_plot_range = sim_res_phase_range
+      res_plot = sim_phase_res_plot
+   endif else begin
+      phase_plot_range = res_phase_range
+      res_plot = analytic_res_plot
+   endelse
+   model_analytic_res_plot = [model_analytic_phase_residual[0], $
+      model_analytic_phase_residual, model_analytic_phase_residual[n_freq-1]]
+
+   window_num=7
+   ; if windowavailable(window_num) then begin
+   ;    wset, window_num
+   ;    if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+   ; endif else make_win = 1
+   ; if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+   window, window_num
+   cgerase
+
+   poly_chi2 = fltarr(n_freq)
+   poly_reduced_chi2 = fltarr(n_freq)
+   for degree=0, n_elements(poly_reduced_chi2)-1 do begin
+      model_analytic_poly_coeffs = poly_fit(frequencies, sim_input_val, degree, $
+         chisq=model_analytic_poly_chisq, yfit=model_analytic_poly_fit, /double)
+      poly_chi2[degree] = model_analytic_poly_chisq
+      poly_reduced_chi2[degree] = model_analytic_poly_chisq/(n_freq-degree-1)
+   endfor
+   degree_min_reduced_chi2 = where(poly_reduced_chi2 eq min(poly_reduced_chi2), count_min_chi2)
+   degree_use = where(poly_chi2 eq min(poly_chi2), count_min_chi2)
+   if count_min_chi2 ne 1 then print, "multiple best degrees, using lowest"
+   degree_use = degree_use[0]
+   model_analytic_poly_coeffs = poly_fit(frequencies, model_analytic_phase_residual, degree_use, $
+      chisq=model_analytic_poly_chisq, yfit=model_analytic_poly_fit, /double)
+   print, 'best chi2 polynomial degreee (degree used): ', degree_use
+   print, 'best reduced chi2 polynomial degreee: ', degree_min_reduced_chi2
+   print, 'polynomial fit chi squared: ' + number_formatter(model_analytic_poly_chisq)
+   print, 'polynomial fit chi squared/dof: ' + number_formatter(model_analytic_poly_chisq/(n_freq-degree_use-1))
+   model_analytic_poly_fit_plot = [model_analytic_poly_fit[0], $
+      model_analytic_poly_fit, model_analytic_poly_fit[n_freq-1]]
+
+   model_poly_residual = model_analytic_res_plot - model_analytic_poly_fit_plot
+   poly_residual = analytic_res_plot - model_analytic_poly_fit_plot
+
+   cgplot, freq_plot, res_plot*0, yrange = model_analytic_phase_range, xstyle=1, xtitle = 'f (MHz)', ytick_get = yticks, ytitle = 'degrees', $
+            title = 'Residual Phase', psym=-3, axiscolor='black', color = 'black', $
+            charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, font = font
+   cgcolorfill, [shade_freqs_range, reverse(shade_freqs_range)], $
+      [model_analytic_phase_range[0], model_analytic_phase_range[0], $
+      model_analytic_phase_range[1], model_analytic_phase_range[1]]*.99, $
+      color='light grey'
+   cgplot, /overplot, [frequencies[0], frequencies[-1]], [0, 0], color='black'
+   cgplot, /overplot, freq_plot, analytic_res_plot, psym=10, color = 'red', thick = thick
+   cgplot, /overplot, freq_plot, model_analytic_res_plot, psym=10, color = 'navy', thick = thick
+   cgplot, /overplot, freq_plot, model_analytic_poly_fit_plot, psym=10, color = 'green', thick = thick
+   cgplot, /overplot, freq_plot, poly_residual, psym=10, color = 'orange', thick = thick
+   cgplot, /overplot, freq_plot, model_poly_residual, psym=10, color = 'blue', thick = thick
+
+   cglegend, colors=['red', 'navy', 'green', 'orange', 'blue'], $
+      /box, /data, alignment=2, location=[freq_plot[-1], model_analytic_phase_range[0]], $
+      titles=['flagged to analytic residual', 'reconstructed to analytic residual', $
+      'poly fit', 'flagged polyfit residual', 'reconstructed polyfit residual']
+
 
    baseline_dist = sqrt((baseline_u - uv_loc[0])^2d + (baseline_v - uv_loc[1])^2d)
    beam_radii_freq = dblarr(n_freq)
@@ -828,7 +936,9 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
 
    colors = round(cgScaleVector(findgen(n_freq), 0, 255))
 
-   infl_track_plotfile = base_path('plots') + 'single_use/multibaseline_modern_track' + plot_exten
+   infl_track_plotfile = base_path('plots') + 'single_use/multibaseline_modern_track'
+   infl_track_plotfile += '_u' + number_formatter(u_pix) + '_v' + number_formatter(v_pix)
+   infl_track_plotfile +=plot_exten
 
    if keyword_set(pub) then begin
       cgps_open, infl_track_plotfile, /font, encapsulated=eps
@@ -838,7 +948,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       charsize = charsize, font = font, $
       xrange=plot_xrange, yrange=plot_yrange, title='Influence Center of Mass', $
       xtitle=textoidl('u (\lambda)', font = font), ytitle=textoidl('v (\lambda)', font = font)
-   cgloadct, 25, /brewer
+   cgloadct, 64, /reverse
    for j=0, n_freq-2 do begin
       if frequencies[j] ge shade_freqs_range[0] and frequencies[j] le shade_freqs_range[1] then begin
          thickness=4
@@ -964,16 +1074,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       baseline_loc_color = 'black'
    endelse
 
-   if use_sim_residual then begin
-      phase_plot_range = sim_res_phase_range
-      res_plot = [sim_phase_residual[0], sim_phase_residual, sim_phase_residual[n_freq-1]]
-   endif else begin
-      phase_plot_range = res_phase_range
-      res_plot = [phase_residual[0], phase_residual, phase_residual[n_freq-1]]
-   endelse
-
-   delta_freq = frequencies[1]-frequencies[0]
-   freq_plot = [frequencies[0]-delta_freq/2, frequencies, frequencies[n_freq-1]+delta_freq/2]
    cgplot, freq_plot, res_plot*0, yrange = phase_plot_range, xstyle=1, xtitle = 'f (MHz)', ytick_get = yticks, ytitle = 'degrees', $
             title = 'Residual Phase', position = positions[*, n_freq_plot*3], psym=-3, axiscolor='black', color = 'black', $
             charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, font = font
