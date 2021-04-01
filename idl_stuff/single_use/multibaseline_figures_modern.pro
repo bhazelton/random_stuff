@@ -1,8 +1,10 @@
 pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
+   use_spline=use_spline, $
    make_movie_frames = make_movie_frames, plot_2d_ps = plot_2d_ps, $
    refresh = refresh, png = png, pdf=pdf, eps=eps, grey_scale = grey_scale
 
   if n_elements(use_sim_residual) eq 0 then use_sim_residual = 1
+  if n_elements(use_spline) eq 0 then use_spline = 1
   if n_elements(make_movie_frames) eq 0 then make_movie_frames = 0
   if n_elements(plot_2d_ps) eq 0 then plot_2d_ps = 0
 
@@ -666,13 +668,42 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       model_analytic_phase_residual, model_analytic_phase_residual[n_freq-1]]
 
    window_num=7
-   ; if windowavailable(window_num) then begin
-   ;    wset, window_num
-   ;    if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
-   ; endif else make_win = 1
-   ; if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
+   xsize = 900
+   ysize = 500
+   if windowavailable(window_num) then begin
+      wset, window_num
+      if !d.x_size ne xsize or !d.y_size ne ysize then make_win = 1 else make_win = 0
+   endif else make_win = 1
+   if make_win eq 1 then window, window_num, xsize = xsize, ysize = ysize
    window, window_num
    cgerase
+
+   res_phase_plotfile = base_path('plots') + 'single_use/multibaseline_modern_phase_res'
+   if use_spline then begin
+      res_phase_plotfile += "_spline"
+   endif else begin
+      res_phase_plotfile += "_poly"
+   endelse
+   res_phase_plotfile += '_u' + number_formatter(u_pix) + '_v' + number_formatter(v_pix)
+   res_phase_plotfile +=plot_exten
+
+   if keyword_set(pub) then begin
+      ps_aspect = y_factor / x_factor
+      
+      if ps_aspect lt 1 then landscape = 1 else landscape = 0
+      IF Keyword_Set(eps) THEN landscape = 0
+      sizes = cgpswindow(LANDSCAPE=landscape, aspectRatio = ps_aspect, /sane_offsets)
+            
+      cgps_open, res_phase_plotfile, /font, encapsulated=eps, /nomatch, inches=sizes.inches, $
+         xsize=sizes.xsize, ysize=sizes.ysize, $
+         xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
+
+      font = 1
+
+   endif else begin
+      font = -1
+   endelse
+   charsize = 1.5
 
    poly_chi2 = fltarr(n_freq)
    poly_reduced_chi2 = fltarr(n_freq)
@@ -698,9 +729,35 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    model_poly_residual = model_analytic_res_plot - model_analytic_poly_fit_plot
    poly_residual = analytic_res_plot - model_analytic_poly_fit_plot
 
-   cgplot, freq_plot, res_plot*0, yrange = model_analytic_phase_range, xstyle=1, xtitle = 'f (MHz)', ytick_get = yticks, ytitle = 'degrees', $
-            title = 'Residual Phase', psym=-3, axiscolor='black', color = 'black', $
-            charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, ythick = ythick, font = font
+   spline_decimation_factor = 7
+   spline_inds = indgen(n_freq/spline_decimation_factor)*spline_decimation_factor
+   if max(spline_inds) ne n_freq-1 then begin
+      if max(spline_inds) ge n_freq then begin
+         spline_inds[-1] = n_freq-1
+      endif else begin
+         spline_inds = [spline_inds, n_freq-1]
+      endelse
+   endif
+   model_analytic_spline_fit = spline(frequencies[spline_inds], $
+      model_analytic_phase_residual[spline_inds], frequencies, 10)
+   model_analytic_spline_fit_plot = [model_analytic_spline_fit[0], $
+      model_analytic_spline_fit, model_analytic_spline_fit[n_freq-1]]
+
+   model_spline_residual = model_analytic_res_plot - model_analytic_spline_fit_plot
+   spline_residual = analytic_res_plot - model_analytic_spline_fit_plot
+
+   margin = [0.15, 0.2, 0.05, 0.1]
+   positions = fltarr(4, 2)
+
+   plot_midpoint = (1 - margin[1] - margin[3]) / 2.
+   positions[*,0] = [margin[0], plot_midpoint, 1-margin[2], 1-margin[3]]
+   positions[*,1] = [margin[0], margin[1], 1-margin[2], plot_midpoint]
+
+   cgplot, freq_plot, res_plot*0, yrange = model_analytic_phase_range, xstyle=1, $
+      position=positions[*,0], xtickformat='(A1)', ytick_get = yticks, ytitle = 'degrees', $
+      title = 'Residual Phase', psym=-3, axiscolor='black', color = 'black', $
+      charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, $
+      ythick = ythick, font = font
    cgcolorfill, [shade_freqs_range, reverse(shade_freqs_range)], $
       [model_analytic_phase_range[0], model_analytic_phase_range[0], $
       model_analytic_phase_range[1], model_analytic_phase_range[1]]*.99, $
@@ -708,15 +765,53 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    cgplot, /overplot, [frequencies[0], frequencies[-1]], [0, 0], color='black'
    cgplot, /overplot, freq_plot, analytic_res_plot, psym=10, color = 'red', thick = thick
    cgplot, /overplot, freq_plot, model_analytic_res_plot, psym=10, color = 'navy', thick = thick
-   cgplot, /overplot, freq_plot, model_analytic_poly_fit_plot, psym=10, color = 'green', thick = thick
-   cgplot, /overplot, freq_plot, poly_residual, psym=10, color = 'orange', thick = thick
-   cgplot, /overplot, freq_plot, model_poly_residual, psym=10, color = 'blue', thick = thick
 
-   cglegend, colors=['red', 'navy', 'green', 'orange', 'blue'], $
-      /box, /data, alignment=2, location=[freq_plot[-1], model_analytic_phase_range[0]], $
-      titles=['flagged to analytic residual', 'reconstructed to analytic residual', $
-      'poly fit', 'flagged polyfit residual', 'reconstructed polyfit residual']
+   if use_spline eq 1 then begin
+      cgplot, /overplot, freq_plot, model_analytic_spline_fit_plot, psym=10, color = 'green', thick = thick
+      leg_names = ['spline fit']
+   endif else begin
+      cgplot, /overplot, freq_plot, model_analytic_poly_fit_plot, psym=10, color = 'green', thick = thick
+      leg_names = ['poly fit']
+   endelse
 
+   if use_spline eq 1 then begin
+      res_fit_range = minmax(spline_residual)
+   endif else begin
+      res_fit_range = minmax(poly_residual)
+   endelse
+
+   cglegend, colors=['red', 'navy', 'green'], /box, /data, alignment=2, $
+      location=[freq_plot[-1], model_analytic_phase_range[0]], $
+      titles=['flagged residual', 'reconstructed residual', leg_names]
+
+   cgplot, freq_plot, res_plot*0, yrange = res_fit_range, xstyle=1, xtitle = 'f (MHz)', $
+            position=positions[*,1], ytick_get = yticks, ytitle = 'degrees', $
+            psym=-3, axiscolor='black', color = 'black', $
+            charsize = charsize, thick = thick, charthick = charthick, xthick = xthick, $
+            ythick = ythick, font = font, /noerase
+   cgcolorfill, [shade_freqs_range, reverse(shade_freqs_range)], $
+      [res_fit_range[0], res_fit_range[0], $
+      res_fit_range[1], res_fit_range[1]]*.99, $
+      color='light grey'
+   cgplot, /overplot, [frequencies[0], frequencies[-1]], [0, 0], color='black'
+
+   if use_spline eq 1 then begin
+      cgplot, /overplot, freq_plot, spline_residual, psym=10, color = 'red', thick = thick
+      cgplot, /overplot, freq_plot, model_spline_residual, psym=10, color = 'navy', thick = thick
+      leg_names = ['flagged spline residual', 'reconstructed spline residual']
+   endif else begin
+      cgplot, /overplot, freq_plot, poly_residual, psym=10, color = 'red', thick = thick
+      cgplot, /overplot, freq_plot, model_poly_residual, psym=10, color = 'navy', thick = thick
+      leg_names = ['flagged polyfit residual', 'reconstructed polyfit residual']
+   endelse
+
+   ; cglegend, colors=['red', 'navy'], /box, /data, alignment=2, location=[freq_plot[-1], $
+   ;    model_analytic_phase_range[0]], titles=leg_names
+
+   if keyword_set(pub) then begin
+      cgps_close, png = png, pdf = pdf, delete_ps = delete_ps, density=600
+      wdelete, window_num
+   endif
 
    baseline_dist = sqrt((baseline_u - uv_loc[0])^2d + (baseline_v - uv_loc[1])^2d)
    beam_radii_freq = dblarr(n_freq)
@@ -916,6 +1011,10 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
          
    cgerase
 
+   infl_track_plotfile = base_path('plots') + 'single_use/multibaseline_modern_track'
+   infl_track_plotfile += '_u' + number_formatter(u_pix) + '_v' + number_formatter(v_pix)
+   infl_track_plotfile +=plot_exten
+
    if keyword_set(pub) then begin
       ps_aspect = y_factor / x_factor
       
@@ -923,7 +1022,7 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
       IF Keyword_Set(eps) THEN landscape = 0
       sizes = cgpswindow(LANDSCAPE=landscape, aspectRatio = ps_aspect, /sane_offsets)
             
-      cgps_open, savefile, /font, encapsulated=eps, /nomatch, inches=sizes.inches, $
+      cgps_open, infl_track_plotfile, /font, encapsulated=eps, /nomatch, inches=sizes.inches, $
          xsize=sizes.xsize, ysize=sizes.ysize, $
          xoffset=sizes.xoffset, yoffset=sizes.yoffset, landscape = landscape
 
@@ -935,14 +1034,6 @@ pro multibaseline_figures_modern, use_sim_residual = use_sim_residual, $
    charsize = 1.5
 
    colors = round(cgScaleVector(findgen(n_freq), 0, 255))
-
-   infl_track_plotfile = base_path('plots') + 'single_use/multibaseline_modern_track'
-   infl_track_plotfile += '_u' + number_formatter(u_pix) + '_v' + number_formatter(v_pix)
-   infl_track_plotfile +=plot_exten
-
-   if keyword_set(pub) then begin
-      cgps_open, infl_track_plotfile, /font, encapsulated=eps
-   endif
 
    cgplot, influence_cog_uv_loc[0,*], influence_cog_uv_loc[1,*], /nodata, position = plot_pos, $
       charsize = charsize, font = font, $
