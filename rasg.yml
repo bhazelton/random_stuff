@@ -43,5 +43,5 @@ dependencies:
       - pep8-naming
       - pytest-cases
       - toml
-      - git+git://github.com/aelanman/analytic_diffuse
+      - git+https://github.com/aelanman/analytic_diffuse
 

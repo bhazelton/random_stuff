@@ -4,7 +4,7 @@ channels:
   - conda-forge
 dependencies:
   - alembic
-  - astropy
+  - astropy>=5.0.4
   - astropy-healpix
   - cartopy
   - coverage
