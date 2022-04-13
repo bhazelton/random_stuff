@@ -3,7 +3,7 @@ channels:
   - defaults
   - conda-forge
 dependencies:
-  - astropy>=4.2
+  - astropy>=5.0.4
   - astropy-healpix
   - astroquery
   - coverage
@@ -37,6 +37,11 @@ dependencies:
       - flake8-docstrings
       - flake8-pytest
       - flake8-rst-docstrings
+      - mpmath
+      - novas
+      - novas_de405
       - pep8-naming
       - pytest-cases
       - toml
+      - git+git://github.com/aelanman/analytic_diffuse
+
