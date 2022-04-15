@@ -1,6 +1,5 @@
 name: hera
 channels:
-  - defaults
   - conda-forge
 dependencies:
   - alembic

@@ -1,7 +1,6 @@
 name: pkgbuild
 channels:
   - conda-forge
-  - defaults
 dependencies:
   - astropy
   - numpy

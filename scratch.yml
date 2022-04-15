@@ -1,6 +1,5 @@
 name: scratch
 channels:
-  - defaults
   - conda-forge
 dependencies:
   - astropy
