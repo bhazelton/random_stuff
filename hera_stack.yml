@@ -2,8 +2,9 @@ name: hera_stack
 channels:
   - conda-forge
 dependencies:
+  - aipy>=3.0.0rc2
   - alembic
-  - astropy
+  - astropy>=5.0.4
   - astropy-healpix
   - coverage
   - flake8
@@ -12,7 +13,7 @@ dependencies:
   - ipython
   - jupyter
   - jupyterlab
-  - numpy
+  - numpy>=1.20
   - pandas
   - pytest-cov
   - pytest
@@ -28,3 +29,4 @@ dependencies:
     - flake8-pytest
     - git+https://github.com/HERA-Team/linsolve.git
     - git+https://github.com/HERA-Team/uvtools.git
+    - git+https://github.com/HERA-Team/hera_sim
