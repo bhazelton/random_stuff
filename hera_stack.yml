@@ -9,14 +9,16 @@ dependencies:
   - coverage
   - flake8
   - h5py
+  - hdf5plugin
   - matplotlib
   - ipython
   - jupyter
   - jupyterlab
   - numpy>=1.20
   - pandas
-  - pytest-cov
   - pytest
+  - pytest-cov
+  - pytest-xdist
   - pyyaml
   - scikit-learn
   - scipy

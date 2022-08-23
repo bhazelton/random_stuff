@@ -23,6 +23,7 @@ dependencies:
   - pypandoc
   - pytest
   - pytest-cov
+  - pytest-xdist
   - pyuvdata
   - pyyaml
   - redis-py
@@ -33,7 +34,7 @@ dependencies:
   - tabulate
   - pip
   - pip:
-      - pytest-cases
+      - build
       - black
       - flake8-docstrings
       - flake8-pytest
@@ -42,3 +43,5 @@ dependencies:
       - flake8-docstrings
       - flake8-rst-docstrings
       - pep8-naming
+      - pytest-cases
+      - twine
