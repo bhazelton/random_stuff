@@ -29,6 +29,7 @@ dependencies:
   - pip:
     - flake8-docstrings
     - flake8-pytest
-    - git+https://github.com/HERA-Team/linsolve.git
-    - git+https://github.com/HERA-Team/uvtools.git
+    - hera-filters
+    - linsolve
+    - uvtools
     - git+https://github.com/HERA-Team/hera_sim
