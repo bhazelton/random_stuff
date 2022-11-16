@@ -5,21 +5,35 @@ dependencies:
   - astropy>=5.0.4
   - astropy-healpix
   - astroquery
+  - bandit
+  - black
   - coverage
   - cython
+  # - darglint
   - flake8
+  - flake8-bugbear
+  - flake8-builtins
+  - flake8-comprehensions
+  - flake8-docstrings
+  - flake8-pytest-style
+  - flake8-rst-docstrings
   - h5py
+  - hdf5plugin
   - ipython
   - jplephem
   - jupyter
   - mpi4py
   - numpy
+  - pep8-naming
   - pre-commit
   - psutil
+  - pygments  # for the uvh5 memo
   - pypandoc
   - pytest
+  - pytest-cases
   - pytest-cov
   - pytest-xdist
+  # - pytest-monitor
   - python-casacore>=3.1.0
   - pyyaml
   - scipy
@@ -29,18 +43,11 @@ dependencies:
   - twine
   - pip
   - pip:
+      # - flake8-bandit
       - lunarsky
-      - black
-      - flake8-builtins
-      - flake8-comprehensions
-      - flake8-docstrings
-      - flake8-pytest
-      - flake8-rst-docstrings
       - mpmath
       - novas
       - novas_de405
-      - pep8-naming
-      - pytest-cases
       - toml
       - git+https://github.com/aelanman/analytic_diffuse
 

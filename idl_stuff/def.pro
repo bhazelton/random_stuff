@@ -7,23 +7,20 @@ path_dirs = git_path + ['', 'idl_utilities', 'idl_utilities/fitting_functions',$
                                                    'misc', 'toolkit', 'visu', 'ximview/' + $
                                                    ['', 'docs', 'gscroll', 'hpx', 'utilities'], $
                                                    'zzz_external/' + ['cgis', 'obsolete_astron']]]
-ps_path_dirs = '/Users/bryna/Projects/Physics/eppsilon/' + $
-  ['', 'ps_core', 'ps_compare', 'ps_plotting', $
-  'ps_setup', 'ps_utils', 'ps_wrappers', 'textoidl']
+ps_path = '/Users/bryna/Projects/Physics/eppsilon/'
+;; get subdirectories
+ps_path_dirs = expand_path('+' + ps_path)
 
-;; add plus sign to get subdirectories. Don't want fhdps_utils added from here
-;; so don't include the root directory in that part
 fhd_path = '/Users/bryna/Projects/Physics/FHD/'
-fhd_path_dirs = fhd_path + ['catalog_data', 'fhd_core', 'fhd_output', 'fhd_utils', $
-                            'instrument_config', 'Observations',  'simulation']
+;; get subdirectories
+fhd_path_dirs = expand_path('+' + fhd_path)
 
-temp = fhd_path
-for i=0, n_elements(fhd_path_dirs)-1 do temp = [temp, expand_path('+' + fhd_path_dirs[i])]
-fhd_path_dirs = temp
+pipeline_scripts_path = '/Users/bryna/Projects/Physics/pipeline_scripts'
+pipeline_scripts_dirs = expand_path('+' + pipeline_scripts_path)
 
 fhdps_utils_dirs = '/Users/bryna/Projects/Physics/fhdps_utils'
 
-path_dirs = [ps_path_dirs, fhdps_utils_dirs, path_dirs, fhd_path_dirs]
+path_dirs = [ps_path_dirs, fhdps_utils_dirs, path_dirs, fhd_path_dirs, pipeline_scripts_dirs]
 path_string = strjoin(path_dirs, ':') + ':'
 
 !path = path_string + !path

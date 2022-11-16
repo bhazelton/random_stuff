@@ -3,11 +3,11 @@ channels:
   - conda-forge
 dependencies:
   - astropy
-  - numpy
-  - scipy
-  - h5py
   - cython
+  - h5py
+  - numpy
+  - python-build
   - pip
-  - pip:
-     - pep517
-     - setuptools_scm
+  - scipy
+  - setuptools_scm
+  - twine
