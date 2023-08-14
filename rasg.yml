@@ -2,14 +2,15 @@ name: rasg
 channels:
   - conda-forge
 dependencies:
-  - astropy>=5.0.4
-  - astropy-healpix
-  - astroquery
+  - astropy>=5.2
+  - astropy-healpix>=0.6
+  - astroquery>=0.4.4
   - bandit
   - black
   - coverage
-  - cython
+  - cython>=0.23
   # - darglint
+  - docstring_parser>=0.15
   - flake8
   - flake8-bugbear
   - flake8-builtins
@@ -17,37 +18,38 @@ dependencies:
   - flake8-docstrings
   - flake8-pytest-style
   - flake8-rst-docstrings
-  - h5py
-  - hdf5plugin
+  - h5py>=3.9
+  - hdf5plugin>=3.1.0
   - ipython
   - jplephem
   - jupyter
-  - mpi4py
-  - numpy
+  - mpi4py>=3.0.0
+  - numpy>=1.20
   - pep8-naming
   - pre-commit
   - psutil
+  - pyerfa>=2.0
   - pygments  # for the uvh5 memo
   - pypandoc
-  - pytest
-  - pytest-cases
+  - pytest>=6.2.0
+  - pytest-cases>=3.6.9
   - pytest-cov
   - pytest-xdist
   # - pytest-monitor
-  - python-casacore>=3.1.0
-  - pyyaml
-  - scipy
-  - setuptools_scm
+  - python-casacore>=3.3.1
+  - pyyaml>=5.1
+  - scipy>=1.5
+  - setuptools_scm>=7.0.3
   - spiceypy
-  - sphinx>=3.3
+  - sphinx>=4.3
+  - sphinx_rtd_theme
   - twine
   - pip
   - pip:
       # - flake8-bandit
-      - lunarsky
+      - lunarsky>=0.2.1
       - mpmath
       - novas
       - novas_de405
       - toml
       - git+https://github.com/aelanman/analytic_diffuse
-

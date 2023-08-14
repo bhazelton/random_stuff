@@ -7,19 +7,25 @@ dependencies:
   - astropy>=5.0.4
   - astropy-healpix
   - coverage
+  - docstring_parser>=0.15
   - flake8
+  - frozendict
   - h5py
   - hdf5plugin
   - matplotlib
   - ipython
+  - jax
+  - jaxlib
   - jupyter
   - jupyterlab
+  - line_profiler
   - numpy>=1.20
   - pandas
   - pytest
   - pytest-cov
   - pytest-xdist
   - pyyaml
+  - rich
   - scikit-learn
   - scipy
   - setuptools_scm
@@ -29,7 +35,6 @@ dependencies:
   - pip:
     - flake8-docstrings
     - flake8-pytest
-    - hera-filters
     - linsolve
     - uvtools
     - git+https://github.com/HERA-Team/hera_sim

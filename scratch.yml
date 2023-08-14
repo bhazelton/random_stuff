@@ -19,4 +19,6 @@ dependencies:
   - pip
   - pip:
       - pyradiosky
-      - git+https://github.com/RadioAstronomySoftwareGroup/pyuvsim
+      - novas
+      - novas_de405
+      - pyuvsim
