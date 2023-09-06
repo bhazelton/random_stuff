@@ -1,0 +1,13 @@
+name: rmextract
+channels:
+  - conda-forge
+dependencies:
+  - astropy>=5.2
+  - fortran-compiler
+  - ipython
+  - numpy>=1.20
+  - python-casacore>=3.3.1
+  - scipy>=1.5
+  - pip
+  - pip:
+    - rmextract

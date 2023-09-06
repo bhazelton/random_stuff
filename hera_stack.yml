@@ -37,4 +37,4 @@ dependencies:
     - flake8-pytest
     - linsolve
     - uvtools
-    - git+https://github.com/HERA-Team/hera_sim
+    - hera-sim

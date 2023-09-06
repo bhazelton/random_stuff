@@ -9,9 +9,12 @@ dependencies:
   - numpy
   - openpyxl
   - pandas
+  - pypandoc
   - pytest
   - pyxlsb
   - scipy
   - sqlalchemy
   - setuptools_scm
+  - sphinx>=6.2
+  - sphinx_rtd_theme
   - pip
