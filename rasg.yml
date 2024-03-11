@@ -23,6 +23,7 @@ dependencies:
   - ipython
   - jplephem
   - jupyter
+  - matplotlib
   - mpi4py>=3.0.0
   - numpy>=1.20
   - pep8-naming
@@ -32,7 +33,7 @@ dependencies:
   - pygments  # for the uvh5 memo
   - pypandoc
   - pytest>=6.2.0
-  - pytest-cases>=3.6.9
+  - pytest-cases>=3.8.3
   - pytest-cov
   - pytest-xdist
   # - pytest-monitor
