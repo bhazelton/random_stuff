@@ -6,12 +6,14 @@ dependencies:
   - alembic
   - astropy>=5.0.4
   - astropy-healpix
+  - chex
   - coverage
   - docstring_parser>=0.15
   - flake8
   - frozendict
   - h5py
   - hdf5plugin
+  - hypothesis
   - matplotlib
   - ipython
   - jax
