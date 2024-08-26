@@ -1,22 +1,17 @@
-name: sss
+name: orca
 channels:
   - conda-forge
 dependencies:
-  - black
   - ipython
   - jupyter
   - jupyterlab
   - matplotlib
   - numpy
-  - openpyxl
   - pandas
-  - pre-commit
-  - pypandoc
+  - pgcli
+  - psycopg2
   - pytest
-  - pyxlsb
   - scipy
   - sqlalchemy
-  - setuptools_scm
   - sphinx>=6.2
-  - sphinx_rtd_theme
   - pip

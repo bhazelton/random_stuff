@@ -5,29 +5,18 @@ dependencies:
   - astropy>=6.0
   - astropy-healpix>=1.0.2
   - astroquery>=0.4.4
-  - bandit
-  - black
   - coverage
   - cython>=3.0
-  # - darglint
-  - docstring_parser>=0.16
-  - flake8
-  - flake8-bugbear
-  - flake8-builtins
-  - flake8-comprehensions
-  - flake8-docstrings
-  - flake8-pytest-style
-  - flake8-rst-docstrings
   - h5py>=3.9
   - hdf5plugin>=3.2
   - ipython
   - jplephem
   - jupyter
+  - line_profiler
   - matplotlib
   - mpi4py>=3.1.1
   - numpy>=1.23
   - openmpi
-  - pep8-naming
   - pre-commit
   - psutil
   - pyerfa>=2.0.0.1
@@ -37,9 +26,9 @@ dependencies:
   - pytest-cases>=3.8.3
   - pytest-cov>=5.0
   - pytest-xdist
-  # - pytest-monitor
   - python-casacore>=3.5.2
   - pyyaml>=5.4.1
+  - ruff
   - scipy>=1.7.3
   - setuptools_scm>=7.0.3
   - spiceypy
@@ -48,7 +37,6 @@ dependencies:
   - twine
   - pip
   - pip:
-      # - flake8-bandit
       - lunarsky>=0.2.2
       - mpmath
       - novas
