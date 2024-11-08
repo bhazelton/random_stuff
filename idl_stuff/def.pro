@@ -36,7 +36,8 @@ loadct,39
 
 ;; added this to prevent BadMatch errors on Lion,
 ;; see coyote tip: http://www.idlcoyote.com/misc_tips/badmatch.php
-Device, RETAIN=2
+;; took it out in 2024 for IDL 9.0 on Mac arm because it broke spawn commands and doesn't seem to be needed
+; Device, RETAIN=2
 
 ;; added this to get imagemagick to be found by IDL
 ;; took it out in Jan 2018 because it broke spawn commands and doesn't seem to be needed for imagemagick
