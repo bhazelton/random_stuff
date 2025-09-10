@@ -2,7 +2,6 @@ name: hera_stack
 channels:
   - conda-forge
 dependencies:
-  - aipy>=3.0.5
   - alembic
   - astropy>=5.0.4
   - astropy-healpix
@@ -27,6 +26,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-xdist
+  - pyuvdata
   - pyyaml
   - rich
   - scikit-learn
@@ -36,8 +36,13 @@ dependencies:
   - sphinx
   - pip
   - pip:
+    - aipy>=3.0.5
     - flake8-docstrings
     - flake8-pytest
     - linsolve
-    - uvtools
+    - hera-filters
+    - hera-qm
     - hera-sim
+    - pyradiosky
+    - pyuvsim
+    - uvtools

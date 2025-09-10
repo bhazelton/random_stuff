@@ -1,0 +1,15 @@
+name: cse583
+channels:
+  - conda-forge
+dependencies:
+  - ipytest
+  - ipython
+  - jupyter
+  - jupyterlab
+  - matplotlib
+  - numpy
+  - pandas
+  - pyyaml
+  - scipy
+  - pip
+  - pytest

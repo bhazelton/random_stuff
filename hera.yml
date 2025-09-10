@@ -8,6 +8,8 @@ dependencies:
   - cartopy
   - coverage
   - flake8
+  - flask>=2.0
+  - flask-sqlalchemy
   - h5py
   - matplotlib
   - ipython
@@ -17,20 +19,21 @@ dependencies:
   - pandas
   - pre-commit
   - psutil
-  - psycopg2
+  - psycopg
   - pytest-cov
   - python-dateutil
   - pypandoc
   - pytest
   - pytest-cov
   - pytest-xdist
-  - pyuvdata
+  - pyuvdata>=3.0
   - pyyaml
   - redis-py
+  - ruff
   - scipy
   - setuptools_scm
   - sphinx
-  - sqlalchemy
+  - sqlalchemy>=2.0
   - tabulate
   - pip
   - pip:
