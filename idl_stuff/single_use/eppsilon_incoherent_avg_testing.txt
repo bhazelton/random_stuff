@@ -1,0 +1,103 @@
+hera_folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_2459890.3794263853_matchingFlags_writeHealpix_withPixels_mid_119"
+ps_wrapper, hera_folder
+
+
+hera_folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_2459890.366116461_perPolAntFlagging_writeHealpix_withPixels_mid_119"
+ps_wrapper, hera_folder
+
+
+
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/2459890/fhdOutput/fhd_thesis_v2_MR_freqClip_withInit/Healpix/zen.2459890.3513525105* .
+
+
+
+hera_folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_MR_freqClip_withInit"
+ps_wrapper, hera_folder
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/2459890/fhdOutput/fhd_thesis_v2_MR_freqClip_withInit/Healpix/Combined_obs_thesis_v2_MR_freqClip_withInit_wholeNight_2459890_even_cubeXX.sav .
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/intCrossNights_oneObs/Healpix/Combined_obs_allNights_oneObs_even_cubeXX.sav .
+
+hera_folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_MR_freqClip_withInit/"
+filename = hera_folder + "Healpix/Combined_obs_thesis_v2_MR_freqClip_withInit_wholeNight_2459890_even_cubeXX.sav"
+
+single_file = hera_folder + "Healpix/zen.2459890.3513525105_mid_clip_4obs_17_even_cubeXX.sav"
+
+cross_night_file = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/intCrossNights_oneObs/Healpix/Combined_obs_allNights_oneObs_even_cubeXX.sav"
+
+
+
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/2459890/fhdOutput/fhd_perPolAntFlagging_writeHealpix_centered/Healpix/zen.2459890.365221676_mid_clip_4obs_23_cubeXX.sav .
+
+
+
+cube_file = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_perPolAntFlagging_writeHealpix_centered/Healpix/zen.2459890.365221676_mid_clip_4obs_23_cubeXX.sav"
+
+narrow_inds_file = "/Users/bryna/Projects/Physics/FHD/Observations/HERA_field0a_narrow_inds.idlsave"
+
+choose_hpx_inds, cube_file, narrow_inds_file, /show_plot
+
+wide_inds_file = "/Users/bryna/Projects/Physics/FHD/Observations/HERA_field0a_3x_inds.idlsave"
+
+choose_hpx_inds, cube_file, wide_inds_file, default_size_multiple=3
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/2459890/fhdOutput/fhd_thesis_v2_updatedHpxInds/Healpix/Combined_obs_noRephaseWeights_middle17Obs_2459890_even_cubeXX.sav .
+
+
+
+hera_folder_old = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_MR_freqClip_withInit/"
+filename_old = hera_folder_old + "Healpix/Combined_obs_thesis_v2_MR_freqClip_withInit_wholeNight_2459890_even_cubeXX.sav"
+
+hera_folder_new = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_updatedHpxInds/"
+filename_new = hera_folder_new + "Healpix/Combined_obs_noRephaseWeights_middle17Obs_2459890_even_cubeXX.sav"
+
+
+weights_cube_old = getvar_savefile(filename_old, "weights_cube")
+hpx_inds_old = getvar_savefile(filename_old, "hpx_inds")
+nside_old = getvar_savefile(filename_old, "nside")
+model_cube_old = getvar_savefile(filename_old, "model_cube")
+dirty_cube_old = getvar_savefile(filename_old, "dirty_cube")
+
+weights_cube_new = getvar_savefile(filename_new, "weights_cube")
+hpx_inds_new = getvar_savefile(filename_new, "hpx_inds")
+nside_new = getvar_savefile(filename_new, "nside")
+model_cube_new = getvar_savefile(filename_new, "model_cube")
+dirty_cube_new = getvar_savefile(filename_new, "dirty_cube")
+
+
+healpix_quickimage, weights_cube_old, hpx_inds_old, nside_old, window_num=1
+healpix_quickimage, weights_cube_new, hpx_inds_new, nside_new, window_num=2
+
+healpix_quickimage, model_cube_old, hpx_inds_old, nside_old, window_num=3
+healpix_quickimage, model_cube_new, hpx_inds_new, nside_new, window_num=4
+
+healpix_quickimage, dirty_cube_old, hpx_inds_old, nside_old, window_num=5
+healpix_quickimage, dirty_cube_new, hpx_inds_new, nside_new, window_num=6
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/intCrossNights/Healpix/Combined_obs_updatedHpx_1_* .
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/intCrossNights/Healpix/Combined_obs_updatedHpx_2_* .
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/intCrossNights/Healpix/Combined_obs_updatedHpx_3_* .
+
+
+rsync -avzh bhazelto@login.aoc.nrao.edu:/lustre/aoc/projects/hera/dstorer/Projects/thesis/fhdRuns/intCrossNights/ps_1/ .
+
+
+folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_updatedHpxInds"
+ps_folder = "ps_1"
+obs_name = "Combined_obs_updatedHpx_1"
+ps_wrapper, folder, obs_name, ps_foldername = ps_folder, sigma_range = [1e10, 1e13], nev_range = [1e10, 1e13], /plot_slices, slice_type="power", kspace_plot_type="noise", slice_range=[2e2,2e15], data_range=[2e2,2e15]
+
+
+folder = "/Users/bryna/Projects/Physics/data_files/hera_eppsilon/fhd_thesis_v2_updatedHpxInds"
+ps_folders = "ps_" + ["1", "2", "3"]
+obs_names = "Combined_obs_updatedHpx_" + ["1", "2", "3"]
+
+ps_incoherent_avg_wrapper, folder, obs_names, ps_foldernames = ps_folders

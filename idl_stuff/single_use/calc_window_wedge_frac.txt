@@ -1,0 +1,54 @@
+
+
+full_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_1to2d_bin.idlsave"
+full_bin_arr_3d = getvar_savefile(full_file, "bin_arr_3d")
+
+fov_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_fov_wedge_1to2d_bin.idlsave"
+fov_bin_arr_3d = getvar_savefile(fov_file, "bin_arr_3d")
+
+hor_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_horizon_wedge_1to2d_bin.idlsave"
+hor_bin_arr_3d = getvar_savefile(hor_file, "bin_arr_3d")
+
+
+
+fov_window_frac = n_elements(where(fov_bin_arr_3d gt 0)) * 1./ n_elements(where(full_bin_arr_3d gt 0)) 
+fov_wedge_frac = 1 - fov_window_frac
+
+hor_window_frac = n_elements(where(hor_bin_arr_3d gt 0)) * 1. / n_elements(where(full_bin_arr_3d gt 0)) 
+hor_wedge_frac = 1 - hor_window_frac
+
+
+fov_window_frac
+fov_wedge_frac
+
+hor_window_frac
+hor_wedge_frac
+
+
+
+below kpar of 0.4:
+-----------------
+
+
+full_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_kpar0-0.4_1to2d_bin.idlsave"
+full_bin_arr_3d = getvar_savefile(full_file, "bin_arr_3d")
+
+fov_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_fov_wedge_kpar0-0.4_1to2d_bin.idlsave"
+fov_bin_arr_3d = getvar_savefile(fov_file, "bin_arr_3d")
+
+hor_file = "/Users/bryna/Projects/Physics/data_files/fhd_ps_data/fhd_nb_Aug2017_savedbp_w_cable_w_digjump/ps_fix_pol_inc_handling/data/2d_binning/from_1d/Combined_obs_Aug23_longrunstyle_cubeXX__even_odd_joint_noimgclip_dirty_xx_dft_averemove_swbh_nodensitycorr_no_horizon_wedge_kpar0-0.4_1to2d_bin.idlsave"
+hor_bin_arr_3d = getvar_savefile(hor_file, "bin_arr_3d")
+
+
+fov_window_frac = n_elements(where(fov_bin_arr_3d gt 0)) * 1./ n_elements(where(full_bin_arr_3d gt 0)) 
+fov_wedge_frac = 1 - fov_window_frac
+
+hor_window_frac = n_elements(where(hor_bin_arr_3d gt 0)) * 1. / n_elements(where(full_bin_arr_3d gt 0)) 
+hor_wedge_frac = 1 - hor_window_frac
+
+
+fov_window_frac
+fov_wedge_frac
+
+hor_window_frac
+hor_wedge_frac
