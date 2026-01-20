@@ -42,7 +42,7 @@ dependencies:
   - pip
   - pip:
       - lunarsky>=0.2.5
-      - mpi-pytest>=2025.7.0
+      # - mpi-pytest>=2025.7.0
       - mpmath
       - novas
       - novas_de405

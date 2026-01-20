@@ -9,7 +9,7 @@ dependencies:
   - jupyter
   - matplotlib
   - numba
-  - numpy<2.0
+  - numpy
   - pytest
   - scipy
   - setuptools
