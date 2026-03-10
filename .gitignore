@@ -9,6 +9,11 @@ idl_stuff/coyote/*
 idl_stuff/IDLWorkspace71/*
 idl_stuff/IDLWorkspace/*
 
+# data files
+*.uvh5
+*.bin
+*.html
+
 #python stuff:
 # Byte-compiled / optimized / DLL files
 __pycache__/
