@@ -2,32 +2,33 @@ name: pyfhd
 channels:
   - conda-forge
 dependencies:
-  - python
   - astropy
+  - colorama
   - configargparse
+  - docstring_parser
+  - importlib_resources
+  - h5py
   - ipython
   - jupyter
   - matplotlib
   - numba
   - numpy
+  - pooch
+  - pre-commit
+  - pyinstrument
   - pytest
   - scipy
   - setuptools
+  - setuptools_scm
   - sphinx
-  - colorama
-  - importlib_resources
-  - h5py
-  - pre-commit
-  - black
+  - ruff
   - pip
-  - pyinstrument
   - pip:
-    - sphinx-rtd-theme
-    - sphinx-argparse
-    - sphinx-reports
+    - healpy
+    - myst-parser
     - pytest-cov
     - pytest-html
     - pytest-html-merger
-    - myst-parser
-    - healpy
-    
+    - sphinx-rtd-theme
+    - sphinx-argparse
+    - sphinx-reports

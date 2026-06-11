@@ -40,6 +40,7 @@ dependencies:
   - sphinx_rtd_theme
   - sybil
   - twine
+  - zizmor
   - pip
   - pip:
       - lunarsky>=0.2.5
